@@ -11,10 +11,11 @@ export async function POST(request: Request) {
   const user = await getSessionUser();
   if (!user?.isAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const { topScorer, winner } = await request.json();
+  const { topScorer, topScorerGoals, winner } = await request.json();
 
   const result = {
     topScorer: typeof topScorer === 'string' ? topScorer.trim() || null : null,
+    topScorerGoals: typeof topScorerGoals === 'number' && topScorerGoals >= 0 ? topScorerGoals : null,
     winner: typeof winner === 'string' ? winner.trim() || null : null,
   };
 

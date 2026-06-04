@@ -23,11 +23,12 @@ export function calculateTournamentPoints(
   bet: TournamentBet,
   actualTopScorer: string | null,
   actualWinner: string | null,
+  topScorerGoals: number | null = null,
 ): number {
   let points = 0;
 
   if (actualTopScorer && bet.topScorer.trim().toLowerCase() === actualTopScorer.trim().toLowerCase()) {
-    points += 5;
+    points += (topScorerGoals ?? 0) + 5;
   }
 
   if (actualWinner && bet.winner.trim().toLowerCase() === actualWinner.trim().toLowerCase()) {

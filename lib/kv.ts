@@ -111,15 +111,15 @@ export async function setTournamentBet(bet: TournamentBet): Promise<void> {
 
 export async function getTournamentResult(): Promise<TournamentResult> {
   const rows = await sbFetch('world_cup_tournament_result', { query: 'id=eq.1&limit=1' }) as any[];
-  if (!rows || rows.length === 0) return { topScorer: null, winner: null };
-  return { topScorer: rows[0].top_scorer, winner: rows[0].winner };
+  if (!rows || rows.length === 0) return { topScorer: null, topScorerGoals: null, winner: null };
+  return { topScorer: rows[0].top_scorer, topScorerGoals: rows[0].top_scorer_goals ?? null, winner: rows[0].winner };
 }
 
 export async function setTournamentResult(result: TournamentResult): Promise<void> {
   await sbFetch('world_cup_tournament_result', {
     method: 'PATCH',
     query: 'id=eq.1',
-    body: { top_scorer: result.topScorer, winner: result.winner },
+    body: { top_scorer: result.topScorer, top_scorer_goals: result.topScorerGoals, winner: result.winner },
   });
 }
 

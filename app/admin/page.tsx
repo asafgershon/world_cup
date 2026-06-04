@@ -16,9 +16,9 @@ function AdminContent() {
   const [generating, setGenerating] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState('');
-  const [tournamentResult, setTournamentResult] = useState<TournamentResult>({ topScorer: null, winner: null });
+  const [tournamentResult, setTournamentResult] = useState<TournamentResult>({ topScorer: null, topScorerGoals: null, winner: null });
   const [topScorerInput, setTopScorerInput] = useState('');
-  const [winnerInput, setWinnerInput] = useState('');
+  const [topScorerGoalsInput, setTopScorerGoalsInput] = useState('');  const [winnerInput, setWinnerInput] = useState('');
   const [savingResult, setSavingResult] = useState(false);
   const [resultMsg, setResultMsg] = useState('');
   const [bootstrapping, setBootstrapping] = useState(false);
@@ -40,6 +40,7 @@ function AdminContent() {
       .then((r: TournamentResult) => {
         setTournamentResult(r);
         setTopScorerInput(r.topScorer ?? '');
+        setTopScorerGoalsInput(r.topScorerGoals != null ? String(r.topScorerGoals) : '');
         setWinnerInput(r.winner ?? '');
       });
   }, []);
@@ -99,6 +100,7 @@ function AdminContent() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         topScorer: topScorerInput.trim() || null,
+        topScorerGoals: topScorerGoalsInput !== '' ? parseInt(topScorerGoalsInput, 10) : null,
         winner: winnerInput.trim() || null,
       }),
     });
@@ -215,6 +217,17 @@ function AdminContent() {
               value={topScorerInput}
               onChange={(e) => setTopScorerInput(e.target.value)}
               placeholder="e.g. Kylian Mbappé"
+              className="input"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Top Scorer Goals</label>
+            <input
+              type="number"
+              min={0}
+              value={topScorerGoalsInput}
+              onChange={(e) => setTopScorerGoalsInput(e.target.value)}
+              placeholder="e.g. 8"
               className="input"
             />
           </div>

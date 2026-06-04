@@ -17,12 +17,20 @@ export default async function LeaderboardPage() {
   const entries = await Promise.all(
     allUsers.filter((u) => !u.isAdmin).map(async (u) => {
       const [bets, tBet] = await Promise.all([getUserBets(u.code), getTournamentBet(u.code)]);
-      const matchPoints = bets.reduce((sum, bet) => {
+
+      let perfect = 0, good = 0, miss = 0;
+      for (const bet of bets) {
         const match = matches.find((m) => m.id === bet.matchId);
-        return sum + (match ? calculateMatchPoints(bet, match) : 0);
-      }, 0);
+        if (!match || match.status !== 'FINISHED') continue;
+        const pts = calculateMatchPoints(bet, match);
+        if (pts === 3) perfect++;
+        else if (pts === 1) good++;
+        else miss++;
+      }
+
+      const matchPoints = perfect * 3 + good;
       const tournamentPoints = tBet
-        ? calculateTournamentPoints(tBet, tournamentResult.topScorer, tournamentResult.winner)
+        ? calculateTournamentPoints(tBet, tournamentResult.topScorer, tournamentResult.winner, tournamentResult.topScorerGoals)
         : 0;
       return {
         code: u.code,
@@ -31,6 +39,9 @@ export default async function LeaderboardPage() {
         tournamentPoints,
         total: matchPoints + tournamentPoints,
         betsPlaced: bets.length,
+        perfect,
+        good,
+        miss,
         hasTournamentBet: !!tBet,
         tournamentBet: tBet,
       };
@@ -76,7 +87,9 @@ export default async function LeaderboardPage() {
             <tr>
               <th className="text-left px-4 py-3 text-gray-500 font-medium w-8">#</th>
               <th className="text-left px-4 py-3 text-gray-500 font-medium">Player</th>
-              <th className="text-right px-4 py-3 text-gray-500 font-medium hidden sm:table-cell">Matches</th>
+              <th className="text-center px-3 py-3 text-gray-500 font-medium hidden sm:table-cell" title="Exact score (3 pts)">🎯</th>
+              <th className="text-center px-3 py-3 text-gray-500 font-medium hidden sm:table-cell" title="Correct result (1 pt)">👍</th>
+              <th className="text-center px-3 py-3 text-gray-500 font-medium hidden sm:table-cell" title="Wrong (0 pts)">❌</th>
               <th className="text-right px-4 py-3 text-gray-500 font-medium hidden sm:table-cell">Trophy</th>
               <th className="text-right px-4 py-3 text-gray-500 font-medium">Total</th>
             </tr>
@@ -98,15 +111,21 @@ export default async function LeaderboardPage() {
                     {entry.code === user.code && (
                       <span className="ml-1.5 text-xs text-green-600">(you)</span>
                     )}
-                    <div className="text-xs text-gray-400 mt-0.5">
-                      {entry.betsPlaced} match bets
-                      {entry.hasTournamentBet ? ' · trophy bet placed' : ' · no trophy bet'}
+                    {/* Mobile: show breakdown inline */}
+                    <div className="text-xs text-gray-400 mt-0.5 sm:hidden">
+                      🎯 {entry.perfect} · 👍 {entry.good} · ❌ {entry.miss}
+                      {entry.hasTournamentBet ? ' · trophy' : ''}
+                    </div>
+                    {/* Desktop: just show bet count */}
+                    <div className="text-xs text-gray-400 mt-0.5 hidden sm:block">
+                      {entry.betsPlaced} bets
+                      {entry.hasTournamentBet ? ' · trophy' : ''}
                     </div>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-right text-gray-700 hidden sm:table-cell">
-                  {entry.matchPoints}
-                </td>
+                <td className="px-3 py-3 text-center text-gray-700 hidden sm:table-cell">{entry.perfect}</td>
+                <td className="px-3 py-3 text-center text-gray-700 hidden sm:table-cell">{entry.good}</td>
+                <td className="px-3 py-3 text-center text-gray-700 hidden sm:table-cell">{entry.miss}</td>
                 <td className="px-4 py-3 text-right text-gray-700 hidden sm:table-cell">
                   {entry.tournamentPoints}
                 </td>
@@ -123,7 +142,12 @@ export default async function LeaderboardPage() {
         <div className="card bg-amber-50 border-amber-100">
           <h3 className="font-semibold text-amber-800 mb-2">Tournament Results</h3>
           {tournamentResult.topScorer && (
-            <p className="text-sm">Top scorer: <strong>{tournamentResult.topScorer}</strong></p>
+            <p className="text-sm">
+              Top scorer: <strong>{tournamentResult.topScorer}</strong>
+              {tournamentResult.topScorerGoals != null && (
+                <span className="text-gray-500"> ({tournamentResult.topScorerGoals} goals)</span>
+              )}
+            </p>
           )}
           {tournamentResult.winner && (
             <p className="text-sm">Tournament winner: <strong>{tournamentResult.winner}</strong></p>

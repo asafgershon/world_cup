@@ -22,6 +22,7 @@ export type TournamentBet = {
 
 export type TournamentResult = {
   topScorer: string | null;
+  topScorerGoals: number | null;
   winner: string | null;
 };
 

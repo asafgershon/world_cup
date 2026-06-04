@@ -25,8 +25,7 @@ export default async function DashboardPage() {
   const upcoming = matches
     .filter((m) => (m.status === 'SCHEDULED' || m.status === 'TIMED') && new Date(m.utcDate).getTime() > now)
     .sort((a, b) => new Date(a.utcDate).getTime() - new Date(b.utcDate).getTime())
-    .slice(0, 5);
-
+    .slice(0, 3);
   const finished = matches.filter((m) => m.status === 'FINISHED');
 
   // Calculate mini leaderboard
@@ -39,7 +38,7 @@ export default async function DashboardPage() {
         return sum + (match ? calculateMatchPoints(bet, match) : 0);
       }, 0);
       const tournamentPts = tBet
-        ? calculateTournamentPoints(tBet, tournamentResult.topScorer, tournamentResult.winner)
+        ? calculateTournamentPoints(tBet, tournamentResult.topScorer, tournamentResult.winner, tournamentResult.topScorerGoals)
         : 0;
       return { name: u.name, code: u.code, total: matchPts + tournamentPts };
     }),
@@ -52,7 +51,7 @@ export default async function DashboardPage() {
     return sum + (match ? calculateMatchPoints(bet, match) : 0);
   }, 0);
   const myTournamentPoints = tournamentBet
-    ? calculateTournamentPoints(tournamentBet, tournamentResult.topScorer, tournamentResult.winner)
+    ? calculateTournamentPoints(tournamentBet, tournamentResult.topScorer, tournamentResult.winner, tournamentResult.topScorerGoals)
     : 0;
   const myTotal = myMatchPoints + myTournamentPoints;
   const myRank = leaderboard.findIndex((e) => e.code === user.code) + 1;
