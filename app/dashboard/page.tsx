@@ -1,24 +1,11 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getSessionUser } from '@/lib/auth';
-import { fetchMatches, canBet, formatMatchDate } from '@/lib/football-api';
+import { fetchMatches } from '@/lib/football-api';
 import { getUserBets, getTournamentBet, getAllUsers, getTournamentResult } from '@/lib/kv';
 import { calculateMatchPoints, calculateTournamentPoints } from '@/lib/scoring';
-import { getFlag } from '@/lib/flags';
+import { MatchCard } from '@/components/MatchCard';
 import type { Match, MatchBet } from '@/types';
-
-function StatusBadge({ status }: { status: Match['status'] }) {
-  if (status === 'IN_PLAY' || status === 'LIVE' || status === 'PAUSED') {
-    return (
-      <span className="badge-live flex items-center gap-1">
-        <span className="w-1.5 h-1.5 rounded-full bg-red-500 pulse-dot" />
-        LIVE
-      </span>
-    );
-  }
-  if (status === 'FINISHED') return <span className="badge-finished">Finished</span>;
-  return <span className="badge-scheduled">Upcoming</span>;
-}
 
 export default async function DashboardPage() {
   const user = await getSessionUser();
@@ -107,40 +94,13 @@ export default async function DashboardPage() {
             {upcoming.length === 0 && (
               <p className="text-gray-500 text-sm">No upcoming matches</p>
             )}
-            {upcoming.map((match) => {
-              const myBet = betMap.get(match.id);
-              const bettable = canBet(match);
-              return (
-                <Link
-                  key={match.id}
-                  href={`/match/${match.id}`}
-                  className="card block hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <StatusBadge status={match.status} />
-                    <span className="text-xs text-gray-400">{formatMatchDate(match.utcDate)}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm font-medium">
-                    <span className="flex items-center gap-1">
-                      <span>{getFlag(match.homeTeam.name)}</span>
-                      <span>{match.homeTeam.shortName}</span>
-                    </span>
-                    <span className="mx-2 text-gray-400">vs</span>
-                    <span className="flex items-center gap-1">
-                      <span>{match.awayTeam.shortName}</span>
-                      <span>{getFlag(match.awayTeam.name)}</span>
-                    </span>
-                  </div>
-                  {myBet ? (
-                    <p className="text-xs text-green-600 mt-1">
-                      Your bet: {myBet.homeScore} – {myBet.awayScore}
-                    </p>
-                  ) : bettable ? (
-                    <p className="text-xs text-amber-600 mt-1">No bet yet — place one!</p>
-                  ) : null}
-                </Link>
-              );
-            })}
+            {upcoming.map((match) => (
+              <MatchCard
+                key={match.id}
+                match={match}
+                initialBet={betMap.get(match.id) ?? null}
+              />
+            ))}
           </div>
         </div>
 

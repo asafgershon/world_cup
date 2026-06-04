@@ -53,7 +53,6 @@ export function MatchCard({ match, initialBet }: Props) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  // Reactive now for countdown
   const [now, setNow] = useState(() => Date.now());
 
   const bettingDeadline = new Date(match.utcDate).getTime() - 60 * 60 * 1000;
@@ -70,7 +69,6 @@ export function MatchCard({ match, initialBet }: Props) {
     return () => clearInterval(timer);
   }, [match.utcDate]);
 
-  // Other bets
   const [showOtherBets, setShowOtherBets] = useState(false);
   const [otherBets, setOtherBets] = useState<OtherBet[] | null>(null);
   const [loadingBets, setLoadingBets] = useState(false);
@@ -103,7 +101,11 @@ export function MatchCard({ match, initialBet }: Props) {
 
   const isUrgent = bettable && timeUntilDeadline < 30 * 60 * 1000;
   const isWarning = bettable && timeUntilDeadline < 2 * 60 * 60 * 1000;
-  const countdownColor = isUrgent ? 'text-red-500 font-semibold' : isWarning ? 'text-amber-500' : 'text-gray-400';
+  const countdownColor = isUrgent
+    ? 'text-red-500 font-semibold'
+    : isWarning
+    ? 'text-amber-500'
+    : 'text-gray-400';
 
   const myCode = bet?.userCode;
 
@@ -134,7 +136,7 @@ export function MatchCard({ match, initialBet }: Props) {
 
   return (
     <div className={`card py-3 ${isLive ? 'ring-1 ring-red-300' : ''}`}>
-      {/* Header: group + countdown + date */}
+      {/* Header */}
       <div className="flex items-center justify-between mb-2 text-xs text-gray-400">
         <div className="flex items-center gap-2">
           {isLive && (
@@ -156,99 +158,194 @@ export function MatchCard({ match, initialBet }: Props) {
         </div>
       </div>
 
-      {/* Main row */}
-      <form onSubmit={handleSubmit} className="flex items-center gap-2">
-        {/* Home team */}
-        <div className="flex items-center gap-1.5 flex-1 min-w-0">
-          <span className="text-xl shrink-0">{getFlag(match.homeTeam.name)}</span>
-          <span className="font-semibold text-sm truncate">
-            {match.homeTeam.shortName || match.homeTeam.name}
-          </span>
+      <form onSubmit={handleSubmit}>
+        {/* ── Mobile layout (hidden on sm+) ── */}
+        <div className="sm:hidden">
+          <div className="flex items-start justify-between mb-3">
+            <div className="text-center flex-1">
+              <div className="text-4xl mb-1">{getFlag(match.homeTeam.name)}</div>
+              <div className="text-sm font-semibold leading-tight">
+                {match.homeTeam.shortName || match.homeTeam.name}
+              </div>
+            </div>
+            <div className="flex items-center justify-center pt-3 px-2 shrink-0">
+              {isFinished ? (
+                <span className="text-2xl font-bold text-gray-800 tabular-nums">
+                  {match.score.fullTime.home}–{match.score.fullTime.away}
+                </span>
+              ) : isLive ? (
+                <span className="text-2xl font-bold text-red-600 tabular-nums">
+                  {match.score.fullTime.home ?? 0}–{match.score.fullTime.away ?? 0}
+                </span>
+              ) : (
+                <span className="text-gray-300 text-base font-medium">vs</span>
+              )}
+            </div>
+            <div className="text-center flex-1">
+              <div className="text-4xl mb-1">{getFlag(match.awayTeam.name)}</div>
+              <div className="text-sm font-semibold leading-tight">
+                {match.awayTeam.shortName || match.awayTeam.name}
+              </div>
+            </div>
+          </div>
+
+          {bettable && (
+            <div className="flex items-center justify-center gap-3 mb-2">
+              <input
+                type="number"
+                min={0}
+                max={20}
+                value={home}
+                onChange={(e) => setHome(e.target.value)}
+                placeholder="0"
+                inputMode="numeric"
+                className="w-16 h-12 text-center input text-2xl font-bold"
+                required
+              />
+              <span className="text-gray-400 font-bold text-xl">–</span>
+              <input
+                type="number"
+                min={0}
+                max={20}
+                value={away}
+                onChange={(e) => setAway(e.target.value)}
+                placeholder="0"
+                inputMode="numeric"
+                className="w-16 h-12 text-center input text-2xl font-bold"
+                required
+              />
+            </div>
+          )}
+
+          {bettable ? (
+            <button
+              type="submit"
+              disabled={saving || home === '' || away === ''}
+              className={`w-full btn py-2.5 text-sm font-semibold transition-all ${
+                saved
+                  ? 'bg-green-100 text-green-700 border border-green-200'
+                  : 'btn-primary'
+              }`}
+            >
+              {saving ? '…' : saved ? '✓ Saved' : bet ? 'Update' : 'Bet'}
+            </button>
+          ) : isFinished ? (
+            <div className="text-center">
+              {pts !== null && pts > 0 ? (
+                <span className="font-bold text-green-700">
+                  +{pts} pts{pts === 3 ? ' 🎯' : ''}
+                </span>
+              ) : bet ? (
+                <span className="text-xs text-gray-400">
+                  {bet.homeScore}–{bet.awayScore} · 0 pts
+                </span>
+              ) : (
+                <span className="text-xs text-gray-400">no bet</span>
+              )}
+            </div>
+          ) : (
+            <div className="text-center">
+              {bet ? (
+                <span className="text-sm text-gray-500 font-medium">
+                  Your bet: {bet.homeScore}–{bet.awayScore}
+                </span>
+              ) : (
+                <span className="text-xs text-gray-400">Betting closed</span>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Center: score inputs or actual score */}
-        {isFinished ? (
-          <span className="text-xl font-bold text-gray-800 shrink-0 tabular-nums">
-            {match.score.fullTime.home} – {match.score.fullTime.away}
-          </span>
-        ) : isLive ? (
-          <span className="text-lg font-bold text-red-600 shrink-0 tabular-nums">
-            {match.score.fullTime.home ?? 0} – {match.score.fullTime.away ?? 0}
-          </span>
-        ) : bettable ? (
-          <div className="flex items-center gap-1 shrink-0">
-            <input
-              type="number"
-              min={0}
-              max={20}
-              value={home}
-              onChange={(e) => setHome(e.target.value)}
-              placeholder="0"
-              className="w-12 text-center input py-1.5 text-lg font-bold"
-              required
-            />
-            <span className="text-gray-400 font-bold">–</span>
-            <input
-              type="number"
-              min={0}
-              max={20}
-              value={away}
-              onChange={(e) => setAway(e.target.value)}
-              placeholder="0"
-              className="w-12 text-center input py-1.5 text-lg font-bold"
-              required
-            />
+        {/* ── Desktop layout (hidden on mobile) ── */}
+        <div className="hidden sm:flex items-center gap-2">
+          <div className="flex items-center gap-1.5 flex-1 min-w-0">
+            <span className="text-xl shrink-0">{getFlag(match.homeTeam.name)}</span>
+            <span className="font-semibold text-sm truncate">
+              {match.homeTeam.shortName || match.homeTeam.name}
+            </span>
           </div>
-        ) : (
-          <span className="text-gray-400 font-medium shrink-0">vs</span>
-        )}
 
-        {/* Away team */}
-        <div className="flex items-center justify-end gap-1.5 flex-1 min-w-0">
-          <span className="font-semibold text-sm truncate text-right">
-            {match.awayTeam.shortName || match.awayTeam.name}
-          </span>
-          <span className="text-xl shrink-0">{getFlag(match.awayTeam.name)}</span>
+          {isFinished ? (
+            <span className="text-xl font-bold text-gray-800 shrink-0 tabular-nums">
+              {match.score.fullTime.home} – {match.score.fullTime.away}
+            </span>
+          ) : isLive ? (
+            <span className="text-lg font-bold text-red-600 shrink-0 tabular-nums">
+              {match.score.fullTime.home ?? 0} – {match.score.fullTime.away ?? 0}
+            </span>
+          ) : bettable ? (
+            <div className="flex items-center gap-1 shrink-0">
+              <input
+                type="number"
+                min={0}
+                max={20}
+                value={home}
+                onChange={(e) => setHome(e.target.value)}
+                placeholder="0"
+                className="w-12 text-center input py-1.5 text-lg font-bold"
+                required
+              />
+              <span className="text-gray-400 font-bold">–</span>
+              <input
+                type="number"
+                min={0}
+                max={20}
+                value={away}
+                onChange={(e) => setAway(e.target.value)}
+                placeholder="0"
+                className="w-12 text-center input py-1.5 text-lg font-bold"
+                required
+              />
+            </div>
+          ) : (
+            <span className="text-gray-400 font-medium shrink-0">vs</span>
+          )}
+
+          <div className="flex items-center justify-end gap-1.5 flex-1 min-w-0">
+            <span className="font-semibold text-sm truncate text-right">
+              {match.awayTeam.shortName || match.awayTeam.name}
+            </span>
+            <span className="text-xl shrink-0">{getFlag(match.awayTeam.name)}</span>
+          </div>
+
+          {isFinished ? (
+            <div className="shrink-0 text-right min-w-[4.5rem]">
+              {pts !== null && pts > 0 ? (
+                <span className="font-bold text-green-700">
+                  +{pts} pts{pts === 3 ? ' 🎯' : ''}
+                </span>
+              ) : bet ? (
+                <span className="text-xs text-gray-400">
+                  {bet.homeScore}–{bet.awayScore} · 0pts
+                </span>
+              ) : (
+                <span className="text-xs text-gray-400">no bet</span>
+              )}
+            </div>
+          ) : bettable ? (
+            <button
+              type="submit"
+              disabled={saving || home === '' || away === ''}
+              className={`shrink-0 min-w-[4.5rem] btn py-1.5 text-sm font-semibold transition-all ${
+                saved
+                  ? 'bg-green-100 text-green-700 border border-green-200'
+                  : 'btn-primary'
+              }`}
+            >
+              {saving ? '…' : saved ? '✓ Saved' : bet ? 'Update' : 'Bet'}
+            </button>
+          ) : (
+            <div className="shrink-0 text-right min-w-[4.5rem]">
+              {bet ? (
+                <span className="text-xs text-gray-500 font-medium">
+                  {bet.homeScore}–{bet.awayScore}
+                </span>
+              ) : (
+                <span className="text-xs text-gray-400">no bet</span>
+              )}
+            </div>
+          )}
         </div>
-
-        {/* Right side: bet button OR points OR bet info */}
-        {isFinished ? (
-          <div className="shrink-0 text-right min-w-[4.5rem]">
-            {pts !== null && pts > 0 ? (
-              <span className="font-bold text-green-700">
-                +{pts} pts{pts === 3 ? ' 🎯' : ''}
-              </span>
-            ) : bet ? (
-              <span className="text-xs text-gray-400">
-                {bet.homeScore}–{bet.awayScore} · 0pts
-              </span>
-            ) : (
-              <span className="text-xs text-gray-400">no bet</span>
-            )}
-          </div>
-        ) : bettable ? (
-          <button
-            type="submit"
-            disabled={saving || home === '' || away === ''}
-            className={`shrink-0 min-w-[4.5rem] btn py-1.5 text-sm font-semibold transition-all ${
-              saved
-                ? 'bg-green-100 text-green-700 border border-green-200'
-                : 'btn-primary'
-            }`}
-          >
-            {saving ? '…' : saved ? '✓ Saved' : bet ? 'Update' : 'Bet'}
-          </button>
-        ) : (
-          <div className="shrink-0 text-right min-w-[4.5rem]">
-            {bet ? (
-              <span className="text-xs text-gray-500 font-medium">
-                {bet.homeScore}–{bet.awayScore}
-              </span>
-            ) : (
-              <span className="text-xs text-gray-400">no bet</span>
-            )}
-          </div>
-        )}
       </form>
 
       {/* Other bets toggle */}
@@ -284,7 +381,9 @@ export function MatchCard({ match, initialBet }: Props) {
               <div className="space-y-1">
                 {otherBets.map((ob) => {
                   const isMe = ob.userCode === myCode;
-                  const obPts = isFinished ? calcBetPoints(ob.homeScore, ob.awayScore, match) : null;
+                  const obPts = isFinished
+                    ? calcBetPoints(ob.homeScore, ob.awayScore, match)
+                    : null;
                   return (
                     <div
                       key={ob.userCode}
