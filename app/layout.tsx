@@ -31,6 +31,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 <Link href="/matches" className="px-3 py-1.5 rounded-lg hover:bg-green-700 transition-colors">
                   Matches
                 </Link>
+                <Link href="/groups" className="px-3 py-1.5 rounded-lg hover:bg-green-700 transition-colors">
+                  Groups
+                </Link>
                 <Link href="/tournament" className="px-3 py-1.5 rounded-lg hover:bg-green-700 transition-colors">
                   Trophy
                 </Link>

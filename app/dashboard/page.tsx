@@ -4,6 +4,7 @@ import { getSessionUser } from '@/lib/auth';
 import { fetchMatches, canBet, formatMatchDate } from '@/lib/football-api';
 import { getUserBets, getTournamentBet, getAllUsers, getTournamentResult } from '@/lib/kv';
 import { calculateMatchPoints, calculateTournamentPoints } from '@/lib/scoring';
+import { getFlag } from '@/lib/flags';
 import type { Match, MatchBet } from '@/types';
 
 function StatusBadge({ status }: { status: Match['status'] }) {
@@ -43,7 +44,7 @@ export default async function DashboardPage() {
 
   // Calculate mini leaderboard
   const leaderboard = await Promise.all(
-    allUsers.map(async (u) => {
+    allUsers.filter((u) => !u.isAdmin).map(async (u) => {
       const bets = await getUserBets(u.code);
       const tBet = await getTournamentBet(u.code);
       const matchPts = bets.reduce((sum, bet) => {
@@ -120,9 +121,15 @@ export default async function DashboardPage() {
                     <span className="text-xs text-gray-400">{formatMatchDate(match.utcDate)}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm font-medium">
-                    <span className="flex-1">{match.homeTeam.shortName}</span>
+                    <span className="flex items-center gap-1">
+                      <span>{getFlag(match.homeTeam.name)}</span>
+                      <span>{match.homeTeam.shortName}</span>
+                    </span>
                     <span className="mx-2 text-gray-400">vs</span>
-                    <span className="flex-1 text-right">{match.awayTeam.shortName}</span>
+                    <span className="flex items-center gap-1">
+                      <span>{match.awayTeam.shortName}</span>
+                      <span>{getFlag(match.awayTeam.name)}</span>
+                    </span>
                   </div>
                   {myBet ? (
                     <p className="text-xs text-green-600 mt-1">

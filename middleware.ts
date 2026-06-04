@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { SESSION_COOKIE } from '@/lib/auth';
 
+// Defined inline — middleware runs in Edge runtime, can't import lib/kv (uses fs/path)
+const SESSION_COOKIE = 'wc_session';
 const PUBLIC_PATHS = ['/', '/api/auth'];
 
 export function middleware(request: NextRequest) {

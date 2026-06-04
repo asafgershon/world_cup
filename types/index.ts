@@ -28,7 +28,7 @@ export type TournamentResult = {
 export type Match = {
   id: number;
   utcDate: string;
-  status: 'SCHEDULED' | 'LIVE' | 'IN_PLAY' | 'PAUSED' | 'FINISHED' | 'POSTPONED' | 'CANCELLED';
+  status: 'SCHEDULED' | 'TIMED' | 'LIVE' | 'IN_PLAY' | 'PAUSED' | 'FINISHED' | 'POSTPONED' | 'CANCELLED';
   stage: string;
   group: string | null;
   matchday: number | null;

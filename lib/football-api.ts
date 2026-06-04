@@ -36,7 +36,7 @@ export function getMatchById(matches: Match[], id: number): Match | undefined {
 }
 
 export function canBet(match: Match): boolean {
-  if (match.status !== 'SCHEDULED') return false;
+  if (match.status !== 'SCHEDULED' && match.status !== 'TIMED') return false;
   const kickoff = new Date(match.utcDate).getTime();
   const now = Date.now();
   return kickoff - now > 60 * 60 * 1000; // more than 1 hour away

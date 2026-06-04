@@ -7,14 +7,30 @@ import { getTournamentWinnerPoints } from '@/lib/scoring';
 const TOURNAMENT_DEADLINE = new Date('2026-06-11T13:00:00Z');
 
 const WC_2026_TEAMS = [
-  'Argentina', 'Australia', 'Belgium', 'Bolivia', 'Brazil', 'Cameroon',
-  'Canada', 'Chile', 'Colombia', 'Costa Rica', 'Croatia', 'DR Congo',
-  'Ecuador', 'Egypt', 'England', 'France', 'Germany', 'Ghana',
-  'Honduras', 'Indonesia', 'IR Iran', 'Japan', 'Jamaica', 'Kenya',
-  'Mali', 'Mexico', 'Morocco', 'Netherlands', 'New Zealand', 'Nigeria',
-  'Panama', 'Paraguay', 'Peru', 'Portugal', 'Qatar', 'Saudi Arabia',
-  'Senegal', 'Serbia', 'Slovakia', 'South Africa', 'South Korea', 'Spain',
-  'Switzerland', 'Trinidad & Tobago', 'Tunisia', 'United States', 'Uruguay', 'Uzbekistan',
+  // Group A
+  'Mexico', 'South Africa', 'South Korea', 'Czechia',
+  // Group B
+  'Canada', 'Qatar', 'Switzerland', 'Bosnia-Herzegovina',
+  // Group C
+  'Brazil', 'Morocco', 'Scotland', 'Haiti',
+  // Group D
+  'United States', 'Australia', 'Turkey', 'Paraguay',
+  // Group E
+  'Germany', 'Ecuador', 'Ivory Coast', 'Curaçao',
+  // Group F
+  'Netherlands', 'Japan', 'Sweden', 'Tunisia',
+  // Group G
+  'Belgium', 'Iran', 'Egypt', 'New Zealand',
+  // Group H
+  'Spain', 'Uruguay', 'Saudi Arabia', 'Cape Verde Islands',
+  // Group I
+  'France', 'Senegal', 'Norway', 'Iraq',
+  // Group J
+  'Argentina', 'Austria', 'Algeria', 'Jordan',
+  // Group K
+  'Portugal', 'Colombia', 'Uzbekistan', 'Congo DR',
+  // Group L
+  'England', 'Croatia', 'Ghana', 'Panama',
 ].sort();
 
 const FAVORITES = new Set(['England', 'Portugal', 'Spain', 'Argentina', 'France', 'Brazil']);

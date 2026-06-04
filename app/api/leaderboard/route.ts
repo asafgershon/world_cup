@@ -16,7 +16,7 @@ export async function GET() {
   ]);
 
   const entries: LeaderboardEntry[] = await Promise.all(
-    allUsers.map(async (u) => {
+    allUsers.filter((u) => !u.isAdmin).map(async (u) => {
       const [bets, tBet] = await Promise.all([getUserBets(u.code), getTournamentBet(u.code)]);
       const matchPoints = bets.reduce((sum, bet) => {
         const match = matches.find((m) => m.id === bet.matchId);
