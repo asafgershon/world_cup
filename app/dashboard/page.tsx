@@ -36,7 +36,7 @@ export default async function DashboardPage() {
 
   const now = Date.now();
   const upcoming = matches
-    .filter((m) => m.status === 'SCHEDULED' && new Date(m.utcDate).getTime() > now)
+    .filter((m) => (m.status === 'SCHEDULED' || m.status === 'TIMED') && new Date(m.utcDate).getTime() > now)
     .sort((a, b) => new Date(a.utcDate).getTime() - new Date(b.utcDate).getTime())
     .slice(0, 5);
 
