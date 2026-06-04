@@ -82,6 +82,12 @@ export async function getUserBets(userCode: string): Promise<MatchBet[]> {
   return rows.map((r) => ({ userCode: r.user_code, matchId: r.match_id, homeScore: r.home_score, awayScore: r.away_score, placedAt: r.placed_at }));
 }
 
+export async function getMatchBets(matchId: number): Promise<MatchBet[]> {
+  const rows = await sbFetch('world_cup_match_bets', { query: `match_id=eq.${matchId}` }) as any[];
+  if (!rows) return [];
+  return rows.map((r) => ({ userCode: r.user_code, matchId: r.match_id, homeScore: r.home_score, awayScore: r.away_score, placedAt: r.placed_at }));
+}
+
 // ── Tournament Bets ────────────────────────────────────────────────────────
 
 export async function getTournamentBet(userCode: string): Promise<TournamentBet | null> {

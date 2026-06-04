@@ -1,11 +1,40 @@
 import { NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/auth';
-import { getMatchBet, setMatchBet, getUserBets } from '@/lib/kv';
+import { setMatchBet, getUserBets, getMatchBets, getAllUsers } from '@/lib/kv';
 import { fetchMatches, canBet } from '@/lib/football-api';
 
-export async function GET() {
+export async function GET(request: Request) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { searchParams } = new URL(request.url);
+  const matchIdParam = searchParams.get('matchId');
+
+  if (matchIdParam) {
+    const matchId = parseInt(matchIdParam, 10);
+    if (isNaN(matchId)) return NextResponse.json({ error: 'Invalid matchId' }, { status: 400 });
+
+    const matches = await fetchMatches();
+    const match = matches.find((m) => m.id === matchId);
+    if (!match) return NextResponse.json({ error: 'Match not found' }, { status: 404 });
+
+    const bettingDeadline = new Date(match.utcDate).getTime() - 60 * 60 * 1000;
+    const revealed = Date.now() >= bettingDeadline;
+
+    if (!revealed) {
+      return NextResponse.json({ revealed: false, bets: [] });
+    }
+
+    const [bets, users] = await Promise.all([getMatchBets(matchId), getAllUsers()]);
+    const userMap = new Map(users.map((u) => [u.code, u.name]));
+    const result = bets.map((b) => ({
+      userCode: b.userCode,
+      userName: userMap.get(b.userCode) ?? b.userCode,
+      homeScore: b.homeScore,
+      awayScore: b.awayScore,
+    }));
+    return NextResponse.json({ revealed: true, bets: result });
+  }
 
   const bets = await getUserBets(user.code);
   return NextResponse.json(bets);
