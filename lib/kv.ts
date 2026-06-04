@@ -1,216 +1,139 @@
 import type { User, MatchBet, TournamentBet, TournamentResult, Match } from '@/types';
-import fs from 'fs';
-import path from 'path';
 
-// ── Local file storage (dev fallback when Vercel KV is not configured) ──────
+const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 
-const DATA_DIR = path.join(process.cwd(), '.data');
-const DB_FILE = path.join(DATA_DIR, 'db.json');
-
-type DB = {
-  users: Record<string, User>;
-  usersIndex: string[];
-  bets: Record<string, MatchBet>;
-  userBetsIndex: Record<string, string[]>;
-  tournamentBets: Record<string, TournamentBet>;
-  tournamentResult: TournamentResult;
-  matchesCache: { data: Match[]; expiresAt: number } | null;
-};
-
-function readDB(): DB {
-  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-  if (!fs.existsSync(DB_FILE)) return emptyDB();
-  try {
-    return JSON.parse(fs.readFileSync(DB_FILE, 'utf-8')) as DB;
-  } catch {
-    return emptyDB();
-  }
-}
-
-function emptyDB(): DB {
-  return {
-    users: {},
-    usersIndex: [],
-    bets: {},
-    userBetsIndex: {},
-    tournamentBets: {},
-    tournamentResult: { topScorer: null, winner: null },
-    matchesCache: null,
+async function sbFetch(
+  table: string,
+  options: { method?: string; query?: string; body?: unknown; upsert?: boolean } = {},
+): Promise<unknown> {
+  const { method = 'GET', query = '', body, upsert = false } = options;
+  const url = `${process.env.SUPABASE_URL}/rest/v1/${table}${query ? '?' + query : ''}`;
+  const headers: Record<string, string> = {
+    apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
   };
-}
+  if (upsert) headers['Prefer'] = 'resolution=merge-duplicates';
 
-function writeDB(db: DB): void {
-  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-  fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
-}
+  const res = await fetch(url, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : undefined,
+  });
 
-// ── Detect which backend to use ────────────────────────────────────────────
-
-function useKV(): boolean {
-  return !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
-}
-
-// ── KV imports (lazy to avoid crashes when KV env vars are missing) ────────
-
-async function kv() {
-  const mod = await import('@vercel/kv');
-  return mod.kv;
+  if (!res.ok) return null;
+  if (method !== 'GET' && method !== 'PATCH') return null;
+  const text = await res.text();
+  if (!text) return null;
+  return JSON.parse(text);
 }
 
 // ── Users ──────────────────────────────────────────────────────────────────
 
 export async function getUser(code: string): Promise<User | null> {
   const key = code.toUpperCase();
-  if (useKV()) {
-    const store = await kv();
-    return store.get<User>(`user:${key}`);
-  }
-  const db = readDB();
-  return db.users[key] ?? null;
+  const rows = await sbFetch('world_cup_users', { query: `code=eq.${key}&limit=1` }) as any[];
+  if (!rows || rows.length === 0) return null;
+  const r = rows[0];
+  return { code: r.code, name: r.name, isAdmin: r.is_admin, createdAt: r.created_at };
 }
 
 export async function setUser(user: User): Promise<void> {
   const code = user.code.toUpperCase();
-  if (useKV()) {
-    const store = await kv();
-    await store.set(`user:${code}`, { ...user, code });
-    await store.sadd('users_index', code);
-    return;
-  }
-  const db = readDB();
-  db.users[code] = { ...user, code };
-  if (!db.usersIndex.includes(code)) db.usersIndex.push(code);
-  writeDB(db);
+  await sbFetch('world_cup_users', {
+    method: 'POST',
+    upsert: true,
+    body: { code, name: user.name, is_admin: user.isAdmin, created_at: user.createdAt },
+  });
 }
 
 export async function getAllUsers(): Promise<User[]> {
-  if (useKV()) {
-    const store = await kv();
-    const codes = await store.smembers('users_index');
-    if (!codes || codes.length === 0) return [];
-    const users = await Promise.all(codes.map((c: string) => store.get<User>(`user:${c}`)));
-    return users.filter(Boolean) as User[];
-  }
-  const db = readDB();
-  return db.usersIndex.map((c) => db.users[c]).filter(Boolean);
+  const rows = await sbFetch('world_cup_users') as any[];
+  if (!rows) return [];
+  return rows.map((r) => ({ code: r.code, name: r.name, isAdmin: r.is_admin, createdAt: r.created_at }));
 }
 
 // ── Match Bets ─────────────────────────────────────────────────────────────
 
 export async function getMatchBet(userCode: string, matchId: number): Promise<MatchBet | null> {
   const code = userCode.toUpperCase();
-  if (useKV()) {
-    const store = await kv();
-    return store.get<MatchBet>(`bet:${code}:${matchId}`);
-  }
-  const db = readDB();
-  return db.bets[`${code}:${matchId}`] ?? null;
+  const rows = await sbFetch('world_cup_match_bets', {
+    query: `user_code=eq.${code}&match_id=eq.${matchId}&limit=1`,
+  }) as any[];
+  if (!rows || rows.length === 0) return null;
+  const r = rows[0];
+  return { userCode: r.user_code, matchId: r.match_id, homeScore: r.home_score, awayScore: r.away_score, placedAt: r.placed_at };
 }
 
 export async function setMatchBet(bet: MatchBet): Promise<void> {
   const code = bet.userCode.toUpperCase();
-  if (useKV()) {
-    const store = await kv();
-    await store.set(`bet:${code}:${bet.matchId}`, { ...bet, userCode: code });
-    await store.sadd(`user_bets:${code}`, String(bet.matchId));
-    return;
-  }
-  const db = readDB();
-  db.bets[`${code}:${bet.matchId}`] = { ...bet, userCode: code };
-  if (!db.userBetsIndex[code]) db.userBetsIndex[code] = [];
-  if (!db.userBetsIndex[code].includes(String(bet.matchId))) {
-    db.userBetsIndex[code].push(String(bet.matchId));
-  }
-  writeDB(db);
+  await sbFetch('world_cup_match_bets', {
+    method: 'POST',
+    upsert: true,
+    body: { user_code: code, match_id: bet.matchId, home_score: bet.homeScore, away_score: bet.awayScore, placed_at: bet.placedAt },
+  });
 }
 
 export async function getUserBets(userCode: string): Promise<MatchBet[]> {
   const code = userCode.toUpperCase();
-  if (useKV()) {
-    const store = await kv();
-    const matchIds = await store.smembers(`user_bets:${code}`);
-    if (!matchIds || matchIds.length === 0) return [];
-    const bets = await Promise.all(
-      matchIds.map((id: string) => store.get<MatchBet>(`bet:${code}:${id}`)),
-    );
-    return bets.filter(Boolean) as MatchBet[];
-  }
-  const db = readDB();
-  const ids = db.userBetsIndex[code] ?? [];
-  return ids.map((id) => db.bets[`${code}:${id}`]).filter(Boolean);
+  const rows = await sbFetch('world_cup_match_bets', { query: `user_code=eq.${code}` }) as any[];
+  if (!rows) return [];
+  return rows.map((r) => ({ userCode: r.user_code, matchId: r.match_id, homeScore: r.home_score, awayScore: r.away_score, placedAt: r.placed_at }));
 }
 
 // ── Tournament Bets ────────────────────────────────────────────────────────
 
 export async function getTournamentBet(userCode: string): Promise<TournamentBet | null> {
   const code = userCode.toUpperCase();
-  if (useKV()) {
-    const store = await kv();
-    return store.get<TournamentBet>(`tournament_bet:${code}`);
-  }
-  const db = readDB();
-  return db.tournamentBets[code] ?? null;
+  const rows = await sbFetch('world_cup_tournament_bets', { query: `user_code=eq.${code}&limit=1` }) as any[];
+  if (!rows || rows.length === 0) return null;
+  const r = rows[0];
+  return { userCode: r.user_code, topScorer: r.top_scorer, winner: r.winner, placedAt: r.placed_at };
 }
 
 export async function setTournamentBet(bet: TournamentBet): Promise<void> {
   const code = bet.userCode.toUpperCase();
-  if (useKV()) {
-    const store = await kv();
-    await store.set(`tournament_bet:${code}`, bet);
-    return;
-  }
-  const db = readDB();
-  db.tournamentBets[code] = { ...bet, userCode: code };
-  writeDB(db);
+  await sbFetch('world_cup_tournament_bets', {
+    method: 'POST',
+    upsert: true,
+    body: { user_code: code, top_scorer: bet.topScorer, winner: bet.winner, placed_at: bet.placedAt },
+  });
 }
 
 // ── Tournament Results ─────────────────────────────────────────────────────
 
 export async function getTournamentResult(): Promise<TournamentResult> {
-  if (useKV()) {
-    const store = await kv();
-    const result = await store.get<TournamentResult>('tournament_result');
-    return result ?? { topScorer: null, winner: null };
-  }
-  const db = readDB();
-  return db.tournamentResult;
+  const rows = await sbFetch('world_cup_tournament_result', { query: 'id=eq.1&limit=1' }) as any[];
+  if (!rows || rows.length === 0) return { topScorer: null, winner: null };
+  return { topScorer: rows[0].top_scorer, winner: rows[0].winner };
 }
 
 export async function setTournamentResult(result: TournamentResult): Promise<void> {
-  if (useKV()) {
-    const store = await kv();
-    await store.set('tournament_result', result);
-    return;
-  }
-  const db = readDB();
-  db.tournamentResult = result;
-  writeDB(db);
+  await sbFetch('world_cup_tournament_result', {
+    method: 'PATCH',
+    query: 'id=eq.1',
+    body: { top_scorer: result.topScorer, winner: result.winner },
+  });
 }
 
 // ── Matches Cache ──────────────────────────────────────────────────────────
 
-const MATCHES_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
-
 export async function getMatchesCache(): Promise<Match[] | null> {
-  if (useKV()) {
-    const store = await kv();
-    return store.get<Match[]>('matches_cache');
-  }
-  const db = readDB();
-  if (!db.matchesCache) return null;
-  if (Date.now() > db.matchesCache.expiresAt) return null;
-  return db.matchesCache.data;
+  const rows = await sbFetch('world_cup_matches_cache', { query: 'id=eq.1&limit=1' }) as any[];
+  if (!rows || rows.length === 0) return null;
+  const r = rows[0];
+  if (new Date(r.expires_at).getTime() < Date.now()) return null;
+  return r.data as Match[];
 }
 
 export async function setMatchesCache(matches: Match[]): Promise<void> {
-  if (useKV()) {
-    const store = await kv();
-    await store.set('matches_cache', matches, { ex: 6 * 60 * 60 });
-    return;
-  }
-  const db = readDB();
-  db.matchesCache = { data: matches, expiresAt: Date.now() + MATCHES_CACHE_TTL_MS };
-  writeDB(db);
+  const expiresAt = new Date(Date.now() + CACHE_TTL_MS).toISOString();
+  await sbFetch('world_cup_matches_cache', {
+    method: 'POST',
+    upsert: true,
+    body: { id: 1, data: matches, expires_at: expiresAt },
+  });
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
