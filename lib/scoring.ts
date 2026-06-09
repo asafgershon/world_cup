@@ -1,6 +1,55 @@
 import type { Match, MatchBet, TournamentBet } from '@/types';
 
-const FAVORITES = new Set(['England', 'Portugal', 'Spain', 'Argentina', 'France', 'Brazil']);
+export const WINNER_POINTS: Record<string, number> = {
+  Spain: 30,
+  France: 30,
+  England: 40,
+  Brazil: 50,
+  Argentina: 50,
+  Portugal: 60,
+  Germany: 70,
+  Netherlands: 80,
+  Belgium: 100,
+  Norway: 120,
+  Croatia: 130,
+  Japan: 130,
+  Morocco: 130,
+  Uruguay: 130,
+  Colombia: 150,
+  Mexico: 150,
+  Switzerland: 150,
+  'United States': 150,
+  Austria: 160,
+  Ecuador: 160,
+  Senegal: 160,
+  Sweden: 160,
+  Turkey: 160,
+  Czechia: 180,
+  Scotland: 180,
+  'South Korea': 180,
+  Algeria: 200,
+  Australia: 200,
+  Canada: 200,
+  Egypt: 200,
+  'Ivory Coast': 200,
+  Paraguay: 200,
+  'Bosnia-Herzegovina': 250,
+  Iran: 250,
+  'Congo DR': 300,
+  Ghana: 300,
+  Qatar: 300,
+  'Saudi Arabia': 300,
+  'South Africa': 300,
+  Tunisia: 300,
+  'Cape Verde Islands': 400,
+  Iraq: 400,
+  'New Zealand': 400,
+  Panama: 400,
+  Uzbekistan: 400,
+  'Curaçao': 500,
+  Haiti: 500,
+  Jordan: 500,
+};
 
 export function calculateMatchPoints(bet: MatchBet, match: Match): number {
   if (match.status !== 'FINISHED') return 0;
@@ -8,10 +57,8 @@ export function calculateMatchPoints(bet: MatchBet, match: Match): number {
   const actual = match.score.fullTime;
   if (actual.home === null || actual.away === null) return 0;
 
-  // Exact score
-  if (bet.homeScore === actual.home && bet.awayScore === actual.away) return 3;
+  if (bet.homeScore === actual.home && bet.awayScore === actual.away) return 5;
 
-  // Correct result (home win / draw / away win)
   const betResult = Math.sign(bet.homeScore - bet.awayScore);
   const actualResult = Math.sign(actual.home - actual.away);
   if (betResult === actualResult) return 1;
@@ -28,16 +75,16 @@ export function calculateTournamentPoints(
   let points = 0;
 
   if (actualTopScorer && bet.topScorer.trim().toLowerCase() === actualTopScorer.trim().toLowerCase()) {
-    points += (topScorerGoals ?? 0) + 5;
+    points += 20;
   }
 
   if (actualWinner && bet.winner.trim().toLowerCase() === actualWinner.trim().toLowerCase()) {
-    points += FAVORITES.has(bet.winner) ? 8 : 16;
+    points += WINNER_POINTS[bet.winner] ?? 200;
   }
 
   return points;
 }
 
 export function getTournamentWinnerPoints(team: string): number {
-  return FAVORITES.has(team) ? 8 : 16;
+  return WINNER_POINTS[team] ?? 200;
 }

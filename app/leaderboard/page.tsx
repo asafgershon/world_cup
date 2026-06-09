@@ -18,17 +18,16 @@ export default async function LeaderboardPage() {
     allUsers.filter((u) => !u.isAdmin).map(async (u) => {
       const [bets, tBet] = await Promise.all([getUserBets(u.code), getTournamentBet(u.code)]);
 
-      let perfect = 0, good = 0, miss = 0;
+      let perfect = 0, good = 0, miss = 0, matchPoints = 0;
       for (const bet of bets) {
         const match = matches.find((m) => m.id === bet.matchId);
         if (!match || match.status !== 'FINISHED') continue;
         const pts = calculateMatchPoints(bet, match);
-        if (pts === 3) perfect++;
+        matchPoints += pts;
+        if (pts === 5) perfect++;
         else if (pts === 1) good++;
         else miss++;
       }
-
-      const matchPoints = perfect * 3 + good;
       const tournamentPoints = tBet
         ? calculateTournamentPoints(tBet, tournamentResult.topScorer, tournamentResult.winner, tournamentResult.topScorerGoals)
         : 0;
@@ -87,7 +86,7 @@ export default async function LeaderboardPage() {
             <tr>
               <th className="text-left px-4 py-3 text-gray-500 font-medium w-8">#</th>
               <th className="text-left px-4 py-3 text-gray-500 font-medium">Player</th>
-              <th className="text-center px-3 py-3 text-gray-500 font-medium hidden sm:table-cell" title="Exact score (3 pts)">🎯</th>
+              <th className="text-center px-3 py-3 text-gray-500 font-medium hidden sm:table-cell" title="Exact score (5 pts)">🎯</th>
               <th className="text-center px-3 py-3 text-gray-500 font-medium hidden sm:table-cell" title="Correct result (1 pt)">👍</th>
               <th className="text-center px-3 py-3 text-gray-500 font-medium hidden sm:table-cell" title="Wrong (0 pts)">❌</th>
               <th className="text-right px-4 py-3 text-gray-500 font-medium hidden sm:table-cell">Trophy</th>
