@@ -2,24 +2,26 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getSessionUser } from '@/lib/auth';
 import { fetchMatches } from '@/lib/football-api';
-import { getUserBets, getTournamentBet, getAllUsers, getTournamentResult } from '@/lib/kv';
+import { getUserBets, getTournamentBet, getAllUsers, getTournamentResult, getAllMatchOdds } from '@/lib/kv';
 import { calculateMatchPoints, calculateTournamentPoints } from '@/lib/scoring';
 import { MatchCard } from '@/components/MatchCard';
-import type { Match, MatchBet } from '@/types';
+import type { Match, MatchBet, MatchOdds } from '@/types';
 
 export default async function DashboardPage() {
   const user = await getSessionUser();
   if (!user) redirect('/');
 
-  const [matches, myBets, tournamentBet, allUsers, tournamentResult] = await Promise.all([
+  const [matches, myBets, tournamentBet, allUsers, tournamentResult, allOdds] = await Promise.all([
     fetchMatches(),
     getUserBets(user.code),
     getTournamentBet(user.code),
     getAllUsers(),
     getTournamentResult(),
+    getAllMatchOdds(),
   ]);
 
   const betMap = new Map<number, MatchBet>(myBets.map((b) => [b.matchId, b]));
+  const oddsMap = new Map<string, MatchOdds>(allOdds.map((o) => [`${o.homeTeam}_${o.awayTeam}`, o]));
 
   const now = Date.now();
   const upcoming = matches
@@ -35,7 +37,9 @@ export default async function DashboardPage() {
       const tBet = await getTournamentBet(u.code);
       const matchPts = bets.reduce((sum, bet) => {
         const match = matches.find((m) => m.id === bet.matchId);
-        return sum + (match ? calculateMatchPoints(bet, match) : 0);
+        if (!match) return sum;
+        const betOdds = oddsMap.get(`${match.homeTeam.name}_${match.awayTeam.name}`);
+        return sum + calculateMatchPoints(bet, match, betOdds);
       }, 0);
       const tournamentPts = tBet
         ? calculateTournamentPoints(tBet, tournamentResult.topScorer, tournamentResult.winner, tournamentResult.topScorerGoals)
@@ -48,7 +52,9 @@ export default async function DashboardPage() {
 
   const myMatchPoints = myBets.reduce((sum, bet) => {
     const match = matches.find((m) => m.id === bet.matchId);
-    return sum + (match ? calculateMatchPoints(bet, match) : 0);
+    if (!match) return sum;
+    const betOdds = oddsMap.get(`${match.homeTeam.name}_${match.awayTeam.name}`);
+    return sum + calculateMatchPoints(bet, match, betOdds);
   }, 0);
   const myTournamentPoints = tournamentBet
     ? calculateTournamentPoints(tournamentBet, tournamentResult.topScorer, tournamentResult.winner, tournamentResult.topScorerGoals)
@@ -98,6 +104,7 @@ export default async function DashboardPage() {
                 key={match.id}
                 match={match}
                 initialBet={betMap.get(match.id) ?? null}
+                odds={oddsMap.get(`${match.homeTeam.name}_${match.awayTeam.name}`)}
               />
             ))}
           </div>

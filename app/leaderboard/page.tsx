@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getSessionUser } from '@/lib/auth';
-import { getAllUsers, getUserBets, getTournamentBet, getTournamentResult } from '@/lib/kv';
+import { getAllUsers, getUserBets, getTournamentBet, getTournamentResult, getAllMatchOdds } from '@/lib/kv';
 import { fetchMatches } from '@/lib/football-api';
 import { calculateMatchPoints, calculateTournamentPoints } from '@/lib/scoring';
 
@@ -8,11 +8,13 @@ export default async function LeaderboardPage() {
   const user = await getSessionUser();
   if (!user) redirect('/');
 
-  const [matches, allUsers, tournamentResult] = await Promise.all([
+  const [matches, allUsers, tournamentResult, allOdds] = await Promise.all([
     fetchMatches(),
     getAllUsers(),
     getTournamentResult(),
+    getAllMatchOdds(),
   ]);
+  const oddsMap = new Map(allOdds.map((o) => [`${o.homeTeam}_${o.awayTeam}`, o]));
 
   const entries = await Promise.all(
     allUsers.filter((u) => !u.isAdmin).map(async (u) => {
@@ -22,11 +24,15 @@ export default async function LeaderboardPage() {
       for (const bet of bets) {
         const match = matches.find((m) => m.id === bet.matchId);
         if (!match || match.status !== 'FINISHED') continue;
-        const pts = calculateMatchPoints(bet, match);
+        const betOdds = oddsMap.get(`${match.homeTeam.name}_${match.awayTeam.name}`);
+        const pts = calculateMatchPoints(bet, match, betOdds);
         matchPoints += pts;
-        if (pts === 5) perfect++;
-        else if (pts === 1) good++;
-        else miss++;
+        const a = match.score.fullTime;
+        if (a.home !== null && a.away !== null) {
+          if (bet.homeScore === a.home && bet.awayScore === a.away) perfect++;
+          else if (pts > 0) good++;
+          else miss++;
+        }
       }
       const tournamentPoints = tBet
         ? calculateTournamentPoints(tBet, tournamentResult.topScorer, tournamentResult.winner, tournamentResult.topScorerGoals)

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { Match, MatchBet } from '@/types';
+import type { Match, MatchBet, MatchOdds } from '@/types';
 import { getFlag } from '@/lib/flags';
 
 type OtherBet = {
@@ -11,13 +11,26 @@ type OtherBet = {
   awayScore: number;
 };
 
-function calcBetPoints(homeScore: number, awayScore: number, match: Match): number {
+function calcBetPoints(homeScore: number, awayScore: number, match: Match, odds?: MatchOdds): number {
   if (match.status !== 'FINISHED') return 0;
   const a = match.score.fullTime;
   if (a.home === null || a.away === null) return 0;
-  if (homeScore === a.home && awayScore === a.away) return 3;
-  if (Math.sign(homeScore - awayScore) === Math.sign(a.home - a.away)) return 1;
-  return 0;
+
+  const betResult = Math.sign(homeScore - awayScore);
+  const actualResult = Math.sign(a.home - a.away);
+  if (betResult !== actualResult) return 0;
+
+  let resultPoints: number;
+  if (odds) {
+    if (actualResult === 1) resultPoints = odds.homeOdds;
+    else if (actualResult === 0) resultPoints = odds.drawOdds;
+    else resultPoints = odds.awayOdds;
+  } else {
+    resultPoints = 1;
+  }
+
+  if (homeScore === a.home && awayScore === a.away) return resultPoints + 4;
+  return resultPoints;
 }
 
 function formatDate(utcDate: string) {
@@ -44,9 +57,10 @@ function formatTimeLeft(ms: number): string {
 type Props = {
   match: Match;
   initialBet: MatchBet | null;
+  odds?: MatchOdds;
 };
 
-export function MatchCard({ match, initialBet }: Props) {
+export function MatchCard({ match, initialBet, odds }: Props) {
   const [bet, setBet] = useState<MatchBet | null>(initialBet);
   const [home, setHome] = useState(initialBet != null ? String(initialBet.homeScore) : '');
   const [away, setAway] = useState(initialBet != null ? String(initialBet.awayScore) : '');
@@ -95,7 +109,10 @@ export function MatchCard({ match, initialBet }: Props) {
   const bettable = (match.status === 'SCHEDULED' || match.status === 'TIMED') && timeUntilDeadline > 0;
   const isLive = match.status === 'IN_PLAY' || match.status === 'LIVE' || match.status === 'PAUSED';
   const isFinished = match.status === 'FINISHED';
-  const pts = bet && isFinished ? calcBetPoints(bet.homeScore, bet.awayScore, match) : null;
+  const pts = bet && isFinished ? calcBetPoints(bet.homeScore, bet.awayScore, match, odds) : null;
+  const isExact = bet && isFinished
+    ? bet.homeScore === match.score.fullTime.home && bet.awayScore === match.score.fullTime.away
+    : false;
 
   const groupLabel = match.group ? match.group.replace('GROUP_', 'Group ') : null;
 
@@ -217,6 +234,16 @@ export function MatchCard({ match, initialBet }: Props) {
             </div>
           )}
 
+          {bettable && odds && (
+            <div className="flex justify-center gap-3 text-xs text-gray-400 mb-2">
+              <span>{odds.homeOdds} pts</span>
+              <span className="text-gray-300">|</span>
+              <span>{odds.drawOdds} pts</span>
+              <span className="text-gray-300">|</span>
+              <span>{odds.awayOdds} pts</span>
+            </div>
+          )}
+
           {bettable ? (
             <button
               type="submit"
@@ -233,7 +260,7 @@ export function MatchCard({ match, initialBet }: Props) {
             <div className="text-center">
               {pts !== null && pts > 0 ? (
                 <span className="font-bold text-green-700">
-                  +{pts} pts{pts === 3 ? ' 🎯' : ''}
+                  +{pts} pts{isExact ? ' 🎯' : ''}
                 </span>
               ) : bet ? (
                 <span className="text-xs text-gray-400">
@@ -312,7 +339,7 @@ export function MatchCard({ match, initialBet }: Props) {
             <div className="shrink-0 text-right min-w-[4.5rem]">
               {pts !== null && pts > 0 ? (
                 <span className="font-bold text-green-700">
-                  +{pts} pts{pts === 3 ? ' 🎯' : ''}
+                  +{pts} pts{isExact ? ' 🎯' : ''}
                 </span>
               ) : bet ? (
                 <span className="text-xs text-gray-400">
@@ -346,6 +373,17 @@ export function MatchCard({ match, initialBet }: Props) {
             </div>
           )}
         </div>
+
+        {/* Desktop odds row */}
+        {!isFinished && odds && (
+          <div className="hidden sm:flex justify-center gap-3 text-xs text-gray-400 mt-1.5">
+            <span>{odds.homeOdds} pts</span>
+            <span className="text-gray-300">|</span>
+            <span>{odds.drawOdds} pts</span>
+            <span className="text-gray-300">|</span>
+            <span>{odds.awayOdds} pts</span>
+          </div>
+        )}
       </form>
 
       {/* Other bets toggle */}
@@ -382,7 +420,7 @@ export function MatchCard({ match, initialBet }: Props) {
                 {otherBets.map((ob) => {
                   const isMe = ob.userCode === myCode;
                   const obPts = isFinished
-                    ? calcBetPoints(ob.homeScore, ob.awayScore, match)
+                    ? calcBetPoints(ob.homeScore, ob.awayScore, match, odds)
                     : null;
                   return (
                     <div

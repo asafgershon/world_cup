@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { Match, MatchBet } from '@/types';
+import type { Match, MatchBet, MatchOdds } from '@/types';
 import { MatchCard } from '@/components/MatchCard';
 
 const STAGE_LABELS: Record<string, string> = {
@@ -23,13 +23,18 @@ const STAGE_ORDER = [
 export default function MatchesPage() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [betsMap, setBetsMap] = useState<Map<number, MatchBet>>(new Map());
+  const [oddsMap, setOddsMap] = useState<Map<string, MatchOdds>>(new Map());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([fetch('/api/matches').then((r) => r.json()), fetch('/api/bets').then((r) => r.json())]).then(
-      ([fetchedMatches, fetchedBets]: [Match[], MatchBet[]]) => {
+    Promise.all([
+      fetch('/api/matches').then((r) => r.json()),
+      fetch('/api/bets').then((r) => r.json()),
+      fetch('/api/odds').then((r) => r.json()),
+    ]).then(([fetchedMatches, fetchedBets, fetchedOdds]: [Match[], MatchBet[], MatchOdds[]]) => {
         setMatches(fetchedMatches);
         setBetsMap(new Map(fetchedBets.map((b) => [b.matchId, b])));
+        setOddsMap(new Map(fetchedOdds.map((o) => [`${o.homeTeam}_${o.awayTeam}`, o])));
         setLoading(false);
       },
     );
@@ -81,6 +86,7 @@ export default function MatchesPage() {
                   key={match.id}
                   match={match}
                   initialBet={betsMap.get(match.id) ?? null}
+                  odds={oddsMap.get(`${match.homeTeam.name}_${match.awayTeam.name}`)}
                 />
               ))}
           </div>
