@@ -175,6 +175,16 @@ export function MatchCard({ match, initialBet, odds }: Props) {
         </div>
       </div>
 
+      {!isFinished && odds && (
+        <div className="flex justify-center gap-4 mb-2 text-sm font-bold text-gray-700">
+          <span>{odds.homeOdds} pts</span>
+          <span className="text-gray-300">|</span>
+          <span>{odds.drawOdds} pts</span>
+          <span className="text-gray-300">|</span>
+          <span>{odds.awayOdds} pts</span>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit}>
         {/* ── Mobile layout (hidden on sm+) ── */}
         <div className="sm:hidden">
@@ -231,16 +241,6 @@ export function MatchCard({ match, initialBet, odds }: Props) {
                 className="w-16 h-12 text-center input text-2xl font-bold"
                 required
               />
-            </div>
-          )}
-
-          {bettable && odds && (
-            <div className="flex justify-center gap-3 text-xs text-gray-400 mb-2">
-              <span>{odds.homeOdds} pts</span>
-              <span className="text-gray-300">|</span>
-              <span>{odds.drawOdds} pts</span>
-              <span className="text-gray-300">|</span>
-              <span>{odds.awayOdds} pts</span>
             </div>
           )}
 
@@ -373,17 +373,6 @@ export function MatchCard({ match, initialBet, odds }: Props) {
             </div>
           )}
         </div>
-
-        {/* Desktop odds row */}
-        {!isFinished && odds && (
-          <div className="hidden sm:flex justify-center gap-3 text-xs text-gray-400 mt-1.5">
-            <span>{odds.homeOdds} pts</span>
-            <span className="text-gray-300">|</span>
-            <span>{odds.drawOdds} pts</span>
-            <span className="text-gray-300">|</span>
-            <span>{odds.awayOdds} pts</span>
-          </div>
-        )}
       </form>
 
       {/* Other bets toggle */}
