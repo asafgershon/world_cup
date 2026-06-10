@@ -154,27 +154,16 @@ export function MatchCard({ match, initialBet, odds }: Props) {
   return (
     <div className={`card py-3 ${isLive ? 'ring-1 ring-red-300' : ''}`}>
       {/* Header */}
-      <div className="flex items-start justify-between mb-2 text-xs text-gray-400">
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2">
-            {isLive && (
-              <span className="flex items-center gap-1 text-red-600 font-semibold">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                LIVE
-              </span>
-            )}
-            {isFinished && <span className="font-medium text-gray-500">FT</span>}
-            {groupLabel && <span>{groupLabel}</span>}
-          </div>
-          {!isFinished && odds && (
-            <div className="flex gap-3 text-sm font-bold text-gray-700">
-              <span>{odds.homeOdds}</span>
-              <span className="text-gray-300">|</span>
-              <span>{odds.drawOdds}</span>
-              <span className="text-gray-300">|</span>
-              <span>{odds.awayOdds}</span>
-            </div>
+      <div className="flex items-center justify-between mb-2 text-xs text-gray-400">
+        <div className="flex items-center gap-2">
+          {isLive && (
+            <span className="flex items-center gap-1 text-red-600 font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+              LIVE
+            </span>
           )}
+          {isFinished && <span className="font-medium text-gray-500">FT</span>}
+          {groupLabel && <span>{groupLabel}</span>}
         </div>
         <div className="flex items-center gap-2">
           {bettable && (
@@ -189,14 +178,15 @@ export function MatchCard({ match, initialBet, odds }: Props) {
       <form onSubmit={handleSubmit}>
         {/* ── Mobile layout (hidden on sm+) ── */}
         <div className="sm:hidden">
-          <div className="flex items-start justify-between mb-3">
-            <div className="text-center flex-1">
+          <div className="grid grid-cols-[1fr_auto_1fr] mb-3">
+            {/* Row 1: teams */}
+            <div className="text-center">
               <div className="text-4xl mb-1">{getFlag(match.homeTeam.name)}</div>
               <div className="text-sm font-semibold leading-tight">
                 {match.homeTeam.shortName || match.homeTeam.name}
               </div>
             </div>
-            <div className="flex items-center justify-center pt-3 px-2 shrink-0">
+            <div className="flex items-center justify-center px-2">
               {isFinished ? (
                 <span className="text-2xl font-bold text-gray-800 tabular-nums">
                   {match.score.fullTime.home}–{match.score.fullTime.away}
@@ -209,12 +199,20 @@ export function MatchCard({ match, initialBet, odds }: Props) {
                 <span className="text-gray-300 text-base font-medium">vs</span>
               )}
             </div>
-            <div className="text-center flex-1">
+            <div className="text-center">
               <div className="text-4xl mb-1">{getFlag(match.awayTeam.name)}</div>
               <div className="text-sm font-semibold leading-tight">
                 {match.awayTeam.shortName || match.awayTeam.name}
               </div>
             </div>
+            {/* Row 2: odds */}
+            {!isFinished && odds && (
+              <>
+                <div className="text-center text-sm font-bold text-gray-700 pt-1">{odds.homeOdds} pts</div>
+                <div className="text-center text-sm font-bold text-gray-700 pt-1">{odds.drawOdds} pts</div>
+                <div className="text-center text-sm font-bold text-gray-700 pt-1">{odds.awayOdds} pts</div>
+              </>
+            )}
           </div>
 
           {bettable && (
@@ -285,93 +283,111 @@ export function MatchCard({ match, initialBet, odds }: Props) {
         </div>
 
         {/* ── Desktop layout (hidden on mobile) ── */}
-        <div className="hidden sm:flex items-center gap-2">
-          <div className="flex items-center gap-1.5 flex-1 min-w-0">
+        <div className="hidden sm:grid grid-cols-[1fr_auto_1fr_auto] gap-x-2">
+          {/* Row 1: home team */}
+          <div className="flex items-center gap-1.5 min-w-0">
             <span className="text-xl shrink-0">{getFlag(match.homeTeam.name)}</span>
             <span className="font-semibold text-sm truncate">
               {match.homeTeam.shortName || match.homeTeam.name}
             </span>
           </div>
 
-          {isFinished ? (
-            <span className="text-xl font-bold text-gray-800 shrink-0 tabular-nums">
-              {match.score.fullTime.home} – {match.score.fullTime.away}
-            </span>
-          ) : isLive ? (
-            <span className="text-lg font-bold text-red-600 shrink-0 tabular-nums">
-              {match.score.fullTime.home ?? 0} – {match.score.fullTime.away ?? 0}
-            </span>
-          ) : bettable ? (
-            <div className="flex items-center gap-1 shrink-0">
-              <input
-                type="number"
-                min={0}
-                max={20}
-                value={home}
-                onChange={(e) => setHome(e.target.value)}
-                placeholder="0"
-                className="w-12 text-center input py-1.5 text-lg font-bold"
-                required
-              />
-              <span className="text-gray-400 font-bold">–</span>
-              <input
-                type="number"
-                min={0}
-                max={20}
-                value={away}
-                onChange={(e) => setAway(e.target.value)}
-                placeholder="0"
-                className="w-12 text-center input py-1.5 text-lg font-bold"
-                required
-              />
-            </div>
-          ) : (
-            <span className="text-gray-400 font-medium shrink-0">vs</span>
-          )}
+          {/* Row 1: score / inputs */}
+          <div className="flex items-center justify-center">
+            {isFinished ? (
+              <span className="text-xl font-bold text-gray-800 tabular-nums">
+                {match.score.fullTime.home} – {match.score.fullTime.away}
+              </span>
+            ) : isLive ? (
+              <span className="text-lg font-bold text-red-600 tabular-nums">
+                {match.score.fullTime.home ?? 0} – {match.score.fullTime.away ?? 0}
+              </span>
+            ) : bettable ? (
+              <div className="flex items-center gap-1">
+                <input
+                  type="number"
+                  min={0}
+                  max={20}
+                  value={home}
+                  onChange={(e) => setHome(e.target.value)}
+                  placeholder="0"
+                  className="w-12 text-center input py-1.5 text-lg font-bold"
+                  required
+                />
+                <span className="text-gray-400 font-bold">–</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={20}
+                  value={away}
+                  onChange={(e) => setAway(e.target.value)}
+                  placeholder="0"
+                  className="w-12 text-center input py-1.5 text-lg font-bold"
+                  required
+                />
+              </div>
+            ) : (
+              <span className="text-gray-400 font-medium">vs</span>
+            )}
+          </div>
 
-          <div className="flex items-center justify-end gap-1.5 flex-1 min-w-0">
+          {/* Row 1: away team */}
+          <div className="flex items-center justify-end gap-1.5 min-w-0">
             <span className="font-semibold text-sm truncate text-right">
               {match.awayTeam.shortName || match.awayTeam.name}
             </span>
             <span className="text-xl shrink-0">{getFlag(match.awayTeam.name)}</span>
           </div>
 
-          {isFinished ? (
-            <div className="shrink-0 text-right min-w-[4.5rem]">
-              {pts !== null && pts > 0 ? (
-                <span className="font-bold text-green-700">
-                  +{pts} pts{isExact ? ' 🎯' : ''}
-                </span>
-              ) : bet ? (
-                <span className="text-xs text-gray-400">
-                  {bet.homeScore}–{bet.awayScore} · 0pts
-                </span>
-              ) : (
-                <span className="text-xs text-gray-400">no bet</span>
-              )}
-            </div>
-          ) : bettable ? (
-            <button
-              type="submit"
-              disabled={saving || home === '' || away === ''}
-              className={`shrink-0 min-w-[4.5rem] btn py-1.5 text-sm font-semibold transition-all ${
-                saved
-                  ? 'bg-green-100 text-green-700 border border-green-200'
-                  : 'btn-primary'
-              }`}
-            >
-              {saving ? '…' : saved ? '✓ Saved' : bet ? 'Update' : 'Bet'}
-            </button>
-          ) : (
-            <div className="shrink-0 text-right min-w-[4.5rem]">
-              {bet ? (
-                <span className="text-xs text-gray-500 font-medium">
-                  {bet.homeScore}–{bet.awayScore}
-                </span>
-              ) : (
-                <span className="text-xs text-gray-400">no bet</span>
-              )}
-            </div>
+          {/* Row 1: action */}
+          <div className="flex items-center justify-end min-w-[4.5rem]">
+            {isFinished ? (
+              <div className="text-right">
+                {pts !== null && pts > 0 ? (
+                  <span className="font-bold text-green-700">
+                    +{pts} pts{isExact ? ' 🎯' : ''}
+                  </span>
+                ) : bet ? (
+                  <span className="text-xs text-gray-400">
+                    {bet.homeScore}–{bet.awayScore} · 0pts
+                  </span>
+                ) : (
+                  <span className="text-xs text-gray-400">no bet</span>
+                )}
+              </div>
+            ) : bettable ? (
+              <button
+                type="submit"
+                disabled={saving || home === '' || away === ''}
+                className={`w-full btn py-1.5 text-sm font-semibold transition-all ${
+                  saved
+                    ? 'bg-green-100 text-green-700 border border-green-200'
+                    : 'btn-primary'
+                }`}
+              >
+                {saving ? '…' : saved ? '✓ Saved' : bet ? 'Update' : 'Bet'}
+              </button>
+            ) : (
+              <div className="text-right">
+                {bet ? (
+                  <span className="text-xs text-gray-500 font-medium">
+                    {bet.homeScore}–{bet.awayScore}
+                  </span>
+                ) : (
+                  <span className="text-xs text-gray-400">no bet</span>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Row 2: odds (only when not finished) */}
+          {!isFinished && odds && (
+            <>
+              <div className="text-sm font-bold text-gray-700 pt-1">{odds.homeOdds} pts</div>
+              <div className="text-center text-sm font-bold text-gray-700 pt-1">{odds.drawOdds} pts</div>
+              <div className="text-right text-sm font-bold text-gray-700 pt-1">{odds.awayOdds} pts</div>
+              <div />
+            </>
           )}
         </div>
       </form>
