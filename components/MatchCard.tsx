@@ -154,16 +154,27 @@ export function MatchCard({ match, initialBet, odds }: Props) {
   return (
     <div className={`card py-3 ${isLive ? 'ring-1 ring-red-300' : ''}`}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-2 text-xs text-gray-400">
-        <div className="flex items-center gap-2">
-          {isLive && (
-            <span className="flex items-center gap-1 text-red-600 font-semibold">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-              LIVE
-            </span>
+      <div className="flex items-start justify-between mb-2 text-xs text-gray-400">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            {isLive && (
+              <span className="flex items-center gap-1 text-red-600 font-semibold">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                LIVE
+              </span>
+            )}
+            {isFinished && <span className="font-medium text-gray-500">FT</span>}
+            {groupLabel && <span>{groupLabel}</span>}
+          </div>
+          {!isFinished && odds && (
+            <div className="flex gap-3 text-sm font-bold text-gray-700">
+              <span>{odds.homeOdds}</span>
+              <span className="text-gray-300">|</span>
+              <span>{odds.drawOdds}</span>
+              <span className="text-gray-300">|</span>
+              <span>{odds.awayOdds}</span>
+            </div>
           )}
-          {isFinished && <span className="font-medium text-gray-500">FT</span>}
-          {groupLabel && <span>{groupLabel}</span>}
         </div>
         <div className="flex items-center gap-2">
           {bettable && (
@@ -174,16 +185,6 @@ export function MatchCard({ match, initialBet, odds }: Props) {
           <span>{formatDate(match.utcDate)}</span>
         </div>
       </div>
-
-      {!isFinished && odds && (
-        <div className="flex justify-center gap-4 mb-2 text-sm font-bold text-gray-700">
-          <span>{odds.homeOdds} pts</span>
-          <span className="text-gray-300">|</span>
-          <span>{odds.drawOdds} pts</span>
-          <span className="text-gray-300">|</span>
-          <span>{odds.awayOdds} pts</span>
-        </div>
-      )}
 
       <form onSubmit={handleSubmit}>
         {/* ── Mobile layout (hidden on sm+) ── */}
