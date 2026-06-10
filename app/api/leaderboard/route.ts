@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/auth';
-import { getAllUsers, getUserBets, getTournamentBet, getTournamentResult } from '@/lib/kv';
+import { getAllUsers, getUserBets, getTournamentBet, getTournamentResult, getAllMatchOdds } from '@/lib/kv';
 import { fetchMatches } from '@/lib/football-api';
 import { calculateMatchPoints, calculateTournamentPoints } from '@/lib/scoring';
 import type { LeaderboardEntry } from '@/types';
@@ -9,10 +9,11 @@ export async function GET() {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const [matches, allUsers, tournamentResult] = await Promise.all([
+  const [matches, allUsers, tournamentResult, allOdds] = await Promise.all([
     fetchMatches(),
     getAllUsers(),
     getTournamentResult(),
+    getAllMatchOdds(),
   ]);
 
   const entries: LeaderboardEntry[] = await Promise.all(
@@ -20,7 +21,11 @@ export async function GET() {
       const [bets, tBet] = await Promise.all([getUserBets(u.code), getTournamentBet(u.code)]);
       const matchPoints = bets.reduce((sum, bet) => {
         const match = matches.find((m) => m.id === bet.matchId);
-        return sum + (match ? calculateMatchPoints(bet, match) : 0);
+        if (!match) return sum;
+        const odds = allOdds.find(
+          (o) => o.homeTeam === match.homeTeam.name && o.awayTeam === match.awayTeam.name,
+        );
+        return sum + calculateMatchPoints(bet, match, odds);
       }, 0);
       const tournamentPoints = tBet
         ? calculateTournamentPoints(tBet, tournamentResult.topScorer, tournamentResult.winner)

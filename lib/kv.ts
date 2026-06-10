@@ -1,4 +1,4 @@
-import type { User, MatchBet, TournamentBet, TournamentResult, Match } from '@/types';
+import type { User, MatchBet, MatchOdds, TournamentBet, TournamentResult, Match } from '@/types';
 
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 
@@ -140,6 +140,20 @@ export async function setMatchesCache(matches: Match[]): Promise<void> {
     upsert: true,
     body: { id: 1, data: matches, expires_at: expiresAt },
   });
+}
+
+// ── Match Odds ─────────────────────────────────────────────────────────────
+
+export async function getAllMatchOdds(): Promise<MatchOdds[]> {
+  const rows = await sbFetch('world_cup_match_odds') as any[];
+  if (!rows) return [];
+  return rows.map((r) => ({
+    homeTeam: r.home_team,
+    awayTeam: r.away_team,
+    homeOdds: Number(r.home_odds),
+    drawOdds: Number(r.draw_odds),
+    awayOdds: Number(r.away_odds),
+  }));
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────

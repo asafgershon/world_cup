@@ -54,6 +54,14 @@ export type Match = {
   };
 };
 
+export type MatchOdds = {
+  homeTeam: string;
+  awayTeam: string;
+  homeOdds: number;
+  drawOdds: number;
+  awayOdds: number;
+};
+
 export type LeaderboardEntry = {
   userCode: string;
   name: string;

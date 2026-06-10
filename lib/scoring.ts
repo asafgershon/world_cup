@@ -1,4 +1,4 @@
-import type { Match, MatchBet, TournamentBet } from '@/types';
+import type { Match, MatchBet, MatchOdds, TournamentBet } from '@/types';
 
 export const WINNER_POINTS: Record<string, number> = {
   Spain: 30,
@@ -51,19 +51,30 @@ export const WINNER_POINTS: Record<string, number> = {
   Jordan: 500,
 };
 
-export function calculateMatchPoints(bet: MatchBet, match: Match): number {
+export function calculateMatchPoints(bet: MatchBet, match: Match, odds?: MatchOdds): number {
   if (match.status !== 'FINISHED') return 0;
 
   const actual = match.score.fullTime;
   if (actual.home === null || actual.away === null) return 0;
 
-  if (bet.homeScore === actual.home && bet.awayScore === actual.away) return 5;
-
   const betResult = Math.sign(bet.homeScore - bet.awayScore);
   const actualResult = Math.sign(actual.home - actual.away);
-  if (betResult === actualResult) return 1;
+  if (betResult !== actualResult) return 0;
 
-  return 0;
+  let resultPoints: number;
+  if (odds) {
+    if (actualResult === 1) resultPoints = odds.homeOdds;
+    else if (actualResult === 0) resultPoints = odds.drawOdds;
+    else resultPoints = odds.awayOdds;
+  } else {
+    resultPoints = 1;
+  }
+
+  if (bet.homeScore === actual.home && bet.awayScore === actual.away) {
+    return resultPoints + 4;
+  }
+
+  return resultPoints;
 }
 
 export function calculateTournamentPoints(
