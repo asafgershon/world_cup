@@ -5,7 +5,7 @@ import type { TournamentBet } from '@/types';
 import { getTournamentWinnerPoints, WINNER_POINTS } from '@/lib/scoring';
 import { getFlag } from '@/lib/flags';
 
-const TOURNAMENT_DEADLINE = new Date('2026-06-11T13:00:00Z');
+const TOURNAMENT_DEADLINE = new Date('2026-06-13T23:59:59Z');
 
 // Teams sorted by winner points ascending (favorites first)
 const WINNER_TEAMS = (Object.entries(WINNER_POINTS) as [string, number][])

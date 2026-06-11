@@ -43,8 +43,8 @@ export function canBet(match: Match): boolean {
 }
 
 export function canBetTournament(): boolean {
-  // Tournament bets close when the first match kicks off: June 11, 2026 13:00 UTC
-  const deadline = new Date('2026-06-11T13:00:00Z').getTime();
+  // Tournament bets close on June 13, 2026 end of day UTC
+  const deadline = new Date('2026-06-13T23:59:59Z').getTime();
   return Date.now() < deadline;
 }
 
