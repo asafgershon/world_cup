@@ -40,6 +40,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 <Link href="/leaderboard" className="px-3 py-1.5 rounded-lg hover:bg-green-700 transition-colors">
                   Scores
                 </Link>
+                <Link href="/trophy-picks" className="px-3 py-1.5 rounded-lg hover:bg-green-700 transition-colors">
+                  Picks
+                </Link>
               </nav>
             )}
           </div>

@@ -17,7 +17,7 @@ export default async function LeaderboardPage() {
   const oddsMap = new Map(allOdds.map((o) => [`${o.homeTeam}_${o.awayTeam}`, o]));
 
   const entries = await Promise.all(
-    allUsers.filter((u) => !u.isAdmin).map(async (u) => {
+    allUsers.map(async (u) => {
       const [bets, tBet] = await Promise.all([getUserBets(u.code), getTournamentBet(u.code)]);
 
       let perfect = 0, good = 0, miss = 0, matchPoints = 0;

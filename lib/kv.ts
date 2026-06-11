@@ -98,6 +98,12 @@ export async function getTournamentBet(userCode: string): Promise<TournamentBet 
   return { userCode: r.user_code, topScorer: r.top_scorer, winner: r.winner, placedAt: r.placed_at };
 }
 
+export async function getAllTournamentBets(): Promise<TournamentBet[]> {
+  const rows = await sbFetch('world_cup_tournament_bets') as any[];
+  if (!rows) return [];
+  return rows.map((r) => ({ userCode: r.user_code, topScorer: r.top_scorer, winner: r.winner, placedAt: r.placed_at }));
+}
+
 export async function setTournamentBet(bet: TournamentBet): Promise<void> {
   const code = bet.userCode.toUpperCase();
   await sbFetch('world_cup_tournament_bets', {
