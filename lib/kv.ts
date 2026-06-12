@@ -1,4 +1,4 @@
-import type { User, MatchBet, MatchOdds, TournamentBet, TournamentResult, Match } from '@/types';
+import type { User, MatchBet, MatchOdds, MatchScore, TournamentBet, TournamentResult, Match } from '@/types';
 
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 
@@ -145,6 +145,27 @@ export async function setMatchesCache(matches: Match[]): Promise<void> {
     method: 'POST',
     upsert: true,
     body: { id: 1, data: matches, expires_at: expiresAt },
+  });
+}
+
+// ── Match Scores ───────────────────────────────────────────────────────────
+
+export async function getAllMatchScores(): Promise<MatchScore[]> {
+  const rows = await sbFetch('world_cup_match_scores') as any[];
+  if (!rows) return [];
+  return rows.map((r) => ({
+    matchId: r.match_id,
+    homeScore: r.home_score,
+    awayScore: r.away_score,
+    updatedAt: r.updated_at,
+  }));
+}
+
+export async function setMatchScore(matchId: number, homeScore: number, awayScore: number): Promise<void> {
+  await sbFetch('world_cup_match_scores', {
+    method: 'POST',
+    upsert: true,
+    body: { match_id: matchId, home_score: homeScore, away_score: awayScore, updated_at: new Date().toISOString() },
   });
 }
 

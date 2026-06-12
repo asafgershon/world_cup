@@ -54,6 +54,13 @@ export type Match = {
   };
 };
 
+export type MatchScore = {
+  matchId: number;
+  homeScore: number;
+  awayScore: number;
+  updatedAt: string;
+};
+
 export type MatchOdds = {
   homeTeam: string;
   awayTeam: string;
