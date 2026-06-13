@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getSessionUser } from '@/lib/auth';
 import { fetchMatches } from '@/lib/football-api';
-import { getUserBets, getTournamentBet, getAllUsers, getTournamentResult, getAllMatchOdds } from '@/lib/kv';
+import { getUserBets, getTournamentBet, getAllUsers, getTournamentResult, getAllMatchOdds, getAllMatchScores } from '@/lib/kv';
 import { calculateMatchPoints, calculateTournamentPoints } from '@/lib/scoring';
 import { MatchCard } from '@/components/MatchCard';
 import type { Match, MatchBet, MatchOdds } from '@/types';
@@ -11,14 +11,22 @@ export default async function DashboardPage() {
   const user = await getSessionUser();
   if (!user) redirect('/');
 
-  const [matches, myBets, tournamentBet, allUsers, tournamentResult, allOdds] = await Promise.all([
+  const [rawMatches, myBets, tournamentBet, allUsers, tournamentResult, allOdds, matchScores] = await Promise.all([
     fetchMatches(),
     getUserBets(user.code),
     getTournamentBet(user.code),
     getAllUsers(),
     getTournamentResult(),
     getAllMatchOdds(),
+    getAllMatchScores(),
   ]);
+
+  const scoreMap = new Map(matchScores.map((s) => [s.matchId, s]));
+  const matches = rawMatches.map((m) => {
+    const dbScore = scoreMap.get(m.id);
+    if (!dbScore) return m;
+    return { ...m, status: 'FINISHED' as const, score: { ...m.score, fullTime: { home: dbScore.homeScore, away: dbScore.awayScore } } };
+  });
 
   const betMap = new Map<number, MatchBet>(myBets.map((b) => [b.matchId, b]));
   const oddsMap = new Map<string, MatchOdds>(allOdds.map((o) => [`${o.homeTeam}_${o.awayTeam}`, o]));
