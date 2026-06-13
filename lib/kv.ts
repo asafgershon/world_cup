@@ -155,9 +155,9 @@ export async function getAllMatchScores(): Promise<MatchScore[]> {
   const rows = await sbFetch('world_cup_match_scores') as any[];
   if (!rows) return [];
   return rows.map((r) => ({
-    matchId: r.match_id,
-    homeScore: r.home_score,
-    awayScore: r.away_score,
+    matchId: Number(r.match_id),
+    homeScore: Number(r.home_score),
+    awayScore: Number(r.away_score),
     updatedAt: r.updated_at,
   }));
 }
