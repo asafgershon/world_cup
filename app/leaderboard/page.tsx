@@ -109,7 +109,7 @@ export default async function LeaderboardPage() {
               <th className="text-center px-3 py-3 text-gray-500 font-medium hidden sm:table-cell" title="Exact score (5 pts)">🎯</th>
               <th className="text-center px-3 py-3 text-gray-500 font-medium hidden sm:table-cell" title="Correct result (1 pt)">👍</th>
               <th className="text-center px-3 py-3 text-gray-500 font-medium hidden sm:table-cell" title="Wrong (0 pts)">❌</th>
-              <th className="text-center px-3 py-3 text-gray-500 font-medium hidden sm:table-cell" title="Goals (2 pts each)">⚽</th>
+              <th className="text-center px-3 py-3 text-gray-500 font-medium" title="Goals (2 pts each)">⚽</th>
               <th className="text-right px-4 py-3 text-gray-500 font-medium hidden sm:table-cell">Trophy</th>
               <th className="text-right px-4 py-3 text-gray-500 font-medium">Total</th>
             </tr>
@@ -137,7 +137,6 @@ export default async function LeaderboardPage() {
                     {/* Mobile: show breakdown inline */}
                     <div className="text-xs text-gray-400 mt-0.5 sm:hidden">
                       🎯 {entry.perfect} · 👍 {entry.good} · ❌ {entry.miss}
-                      {entry.goals > 0 ? ` · ⚽ ${entry.goals}` : ''}
                       {entry.hasTournamentBet ? ' · trophy' : ''}
                     </div>
                     {/* Desktop: just show bet count */}
@@ -150,7 +149,7 @@ export default async function LeaderboardPage() {
                 <td className="px-3 py-3 text-center text-gray-700 hidden sm:table-cell">{entry.perfect}</td>
                 <td className="px-3 py-3 text-center text-gray-700 hidden sm:table-cell">{entry.good}</td>
                 <td className="px-3 py-3 text-center text-gray-700 hidden sm:table-cell">{entry.miss}</td>
-                <td className="px-3 py-3 text-center hidden sm:table-cell">
+                <td className="px-3 py-3 text-center">
                   {entry.goals > 0 ? (
                     <span className={entry.goals === maxGoals ? 'text-yellow-600 font-semibold' : 'text-gray-700'}>
                       {entry.goals}

@@ -49,7 +49,6 @@ export default async function TrophyPicksPage() {
   const betsMap = new Map(allBets.map((b) => [b.userCode.toUpperCase(), b]));
 
   const rows = allUsers
-    .filter((u) => !u.isAdmin)
     .map((u) => ({ ...u, bet: betsMap.get(u.code.toUpperCase()) ?? null }))
     .sort((a, b) => a.name.localeCompare(b.name));
 
