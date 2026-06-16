@@ -23,6 +23,12 @@ function AdminContent() {
   const [resultMsg, setResultMsg] = useState('');
   const [bootstrapping, setBootstrapping] = useState(false);
   const [bootstrapMsg, setBootstrapMsg] = useState('');
+  const [oddsInput, setOddsInput] = useState('');
+  const [savingOdds, setSavingOdds] = useState(false);
+  const [oddsMsg, setOddsMsg] = useState('');
+  const [playerGoals, setPlayerGoalsState] = useState<Record<string, number>>({});
+  const [savingGoals, setSavingGoals] = useState(false);
+  const [goalsMsg, setGoalsMsg] = useState('');
 
   useEffect(() => {
     async function checkAdmin() {
@@ -42,6 +48,13 @@ function AdminContent() {
         setTopScorerInput(r.topScorer ?? '');
         setTopScorerGoalsInput(r.topScorerGoals != null ? String(r.topScorerGoals) : '');
         setWinnerInput(r.winner ?? '');
+      });
+    fetch('/api/admin/user-goals')
+      .then((r) => r.ok ? r.json() : [])
+      .then((rows: { userCode: string; goals: number }[]) => {
+        const map: Record<string, number> = {};
+        for (const row of rows) map[row.userCode] = row.goals;
+        setPlayerGoalsState(map);
       });
   }, []);
 
@@ -113,6 +126,67 @@ function AdminContent() {
       setResultMsg(data.error ?? 'Error');
     }
     setSavingResult(false);
+  }
+
+  const ODDS_PRESET = JSON.stringify([
+    {"homeTeam":"Czechia","awayTeam":"South Africa","homeOdds":2,"drawOdds":3.5,"awayOdds":4},
+    {"homeTeam":"Switzerland","awayTeam":"Bosnia-Herzegovina","homeOdds":2,"drawOdds":4,"awayOdds":5},
+    {"homeTeam":"Canada","awayTeam":"Qatar","homeOdds":2,"drawOdds":4.5,"awayOdds":7},
+    {"homeTeam":"Mexico","awayTeam":"South Korea","homeOdds":2,"drawOdds":4,"awayOdds":3.5},
+    {"homeTeam":"United States","awayTeam":"Australia","homeOdds":2,"drawOdds":4,"awayOdds":5},
+    {"homeTeam":"Scotland","awayTeam":"Morocco","homeOdds":4,"drawOdds":3,"awayOdds":2},
+    {"homeTeam":"Brazil","awayTeam":"Haiti","homeOdds":1.5,"drawOdds":12,"awayOdds":15},
+    {"homeTeam":"Turkey","awayTeam":"Paraguay","homeOdds":2.5,"drawOdds":3.5,"awayOdds":3.5},
+    {"homeTeam":"Netherlands","awayTeam":"Sweden","homeOdds":2,"drawOdds":4,"awayOdds":5},
+    {"homeTeam":"Germany","awayTeam":"Ivory Coast","homeOdds":1.5,"drawOdds":4.5,"awayOdds":6},
+    {"homeTeam":"Ecuador","awayTeam":"Curaçao","homeOdds":1.5,"drawOdds":6,"awayOdds":10},
+    {"homeTeam":"Tunisia","awayTeam":"Japan","homeOdds":4,"drawOdds":3.5,"awayOdds":2},
+    {"homeTeam":"Spain","awayTeam":"Saudi Arabia","homeOdds":1.5,"drawOdds":8,"awayOdds":12},
+    {"homeTeam":"Belgium","awayTeam":"Iran","homeOdds":1.5,"drawOdds":5,"awayOdds":8},
+    {"homeTeam":"Uruguay","awayTeam":"Cape Verde Islands","homeOdds":1.5,"drawOdds":4,"awayOdds":6},
+    {"homeTeam":"New Zealand","awayTeam":"Egypt","homeOdds":5,"drawOdds":4,"awayOdds":2},
+    {"homeTeam":"Argentina","awayTeam":"Austria","homeOdds":2,"drawOdds":3.5,"awayOdds":5.5},
+    {"homeTeam":"France","awayTeam":"Iraq","homeOdds":1.5,"drawOdds":9,"awayOdds":12},
+    {"homeTeam":"Norway","awayTeam":"Senegal","homeOdds":2,"drawOdds":3.5,"awayOdds":3.5},
+    {"homeTeam":"Jordan","awayTeam":"Algeria","homeOdds":6,"drawOdds":4,"awayOdds":2},
+    {"homeTeam":"Portugal","awayTeam":"Uzbekistan","homeOdds":1.5,"drawOdds":8,"awayOdds":11},
+    {"homeTeam":"England","awayTeam":"Ghana","homeOdds":1.5,"drawOdds":6,"awayOdds":8},
+    {"homeTeam":"Panama","awayTeam":"Croatia","homeOdds":7,"drawOdds":4,"awayOdds":1.5},
+    {"homeTeam":"Colombia","awayTeam":"Congo DR","homeOdds":1.5,"drawOdds":4,"awayOdds":7},
+  ], null, 2);
+
+  async function saveOdds() {
+    setSavingOdds(true);
+    setOddsMsg('');
+    try {
+      const parsed = JSON.parse(oddsInput);
+      const res = await fetch('/api/admin/odds', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ odds: parsed }),
+      });
+      const data = await res.json();
+      setOddsMsg(res.ok ? `Saved ${data.count} odds` : data.error ?? 'Error');
+    } catch {
+      setOddsMsg('Invalid JSON');
+    }
+    setSavingOdds(false);
+    setTimeout(() => setOddsMsg(''), 4000);
+  }
+
+  async function savePlayerGoals() {
+    setSavingGoals(true);
+    setGoalsMsg('');
+    const payload = users.map((u) => ({ userCode: u.code, goals: playerGoals[u.code] ?? 0 }));
+    const res = await fetch('/api/admin/user-goals', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    setGoalsMsg(res.ok ? `Saved goals for ${data.count} players` : data.error ?? 'Error');
+    setSavingGoals(false);
+    setTimeout(() => setGoalsMsg(''), 4000);
   }
 
   if (checkingAuth) {
@@ -246,6 +320,61 @@ function AdminContent() {
           </button>
           {resultMsg && <p className="text-sm text-green-700">{resultMsg}</p>}
         </div>
+      </div>
+
+      {/* Match Odds */}
+      <div className="card space-y-3">
+        <h2 className="font-bold">Match Odds</h2>
+        <p className="text-sm text-gray-500">
+          Set points for correct predictions. Each entry: homeTeam, awayTeam, homeOdds, drawOdds, awayOdds.
+        </p>
+        <textarea
+          value={oddsInput}
+          onChange={(e) => setOddsInput(e.target.value)}
+          rows={8}
+          className="input font-mono text-xs w-full"
+          placeholder='[{"homeTeam":"Brazil","awayTeam":"Haiti","homeOdds":1.5,"drawOdds":12,"awayOdds":15}]'
+        />
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setOddsInput(ODDS_PRESET)}
+            className="btn-secondary text-sm"
+          >
+            Load Round 2 Preset
+          </button>
+          <button onClick={saveOdds} disabled={savingOdds || !oddsInput.trim()} className="btn-primary text-sm">
+            {savingOdds ? 'Saving...' : 'Save Odds'}
+          </button>
+        </div>
+        {oddsMsg && <p className="text-sm text-green-700">{oddsMsg}</p>}
+      </div>
+
+      {/* Player Goals */}
+      <div className="card space-y-3">
+        <h2 className="font-bold">Player Goals (2 pts each)</h2>
+        <p className="text-sm text-gray-500">
+          Each goal = 2 bonus points on the leaderboard. Requires <code className="bg-gray-100 px-1 rounded">world_cup_user_goals</code> table in Supabase.
+        </p>
+        <div className="space-y-2">
+          {users.map((u) => (
+            <div key={u.code} className="flex items-center gap-3">
+              <span className="flex-1 font-medium text-sm">{u.name}</span>
+              <input
+                type="number"
+                min={0}
+                value={playerGoals[u.code] ?? 0}
+                onChange={(e) => setPlayerGoalsState((prev) => ({ ...prev, [u.code]: parseInt(e.target.value) || 0 }))}
+                className="input w-20 text-center py-1 text-sm"
+              />
+              <span className="text-xs text-gray-400">goals</span>
+            </div>
+          ))}
+        </div>
+        <button onClick={savePlayerGoals} disabled={savingGoals || users.length === 0} className="btn-primary text-sm">
+          {savingGoals ? 'Saving...' : 'Save Goals'}
+        </button>
+        {goalsMsg && <p className="text-sm text-green-700">{goalsMsg}</p>}
       </div>
     </div>
   );

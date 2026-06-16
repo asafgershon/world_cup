@@ -184,6 +184,31 @@ export async function getAllMatchOdds(): Promise<MatchOdds[]> {
   }));
 }
 
+export async function setMatchOdds(odds: MatchOdds): Promise<void> {
+  await sbFetch('world_cup_match_odds', {
+    method: 'POST',
+    upsert: true,
+    body: { home_team: odds.homeTeam, away_team: odds.awayTeam, home_odds: odds.homeOdds, draw_odds: odds.drawOdds, away_odds: odds.awayOdds },
+  });
+}
+
+// ── Player Goals ───────────────────────────────────────────────────────────
+
+export async function getAllPlayerGoals(): Promise<{ userCode: string; goals: number }[]> {
+  const rows = await sbFetch('world_cup_user_goals') as any[];
+  if (!rows) return [];
+  return rows.map((r) => ({ userCode: r.user_code, goals: Number(r.goals) }));
+}
+
+export async function setPlayerGoals(userCode: string, goals: number): Promise<void> {
+  const code = userCode.toUpperCase();
+  await sbFetch('world_cup_user_goals', {
+    method: 'POST',
+    upsert: true,
+    body: { user_code: code, goals, updated_at: new Date().toISOString() },
+  });
+}
+
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 export function generateCode(): string {

@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getSessionUser } from '@/lib/auth';
-import { getAllUsers, getUserBets, getTournamentBet, getTournamentResult, getAllMatchOdds, getAllMatchScores } from '@/lib/kv';
+import { getAllUsers, getUserBets, getTournamentBet, getTournamentResult, getAllMatchOdds, getAllMatchScores, getAllPlayerGoals } from '@/lib/kv';
 import { fetchMatches } from '@/lib/football-api';
 import { calculateMatchPoints, calculateTournamentPoints } from '@/lib/scoring';
 
@@ -8,14 +8,16 @@ export default async function LeaderboardPage() {
   const user = await getSessionUser();
   if (!user) redirect('/');
 
-  const [rawMatches, allUsers, tournamentResult, allOdds, matchScores] = await Promise.all([
+  const [rawMatches, allUsers, tournamentResult, allOdds, matchScores, playerGoalsRows] = await Promise.all([
     fetchMatches(),
     getAllUsers(),
     getTournamentResult(),
     getAllMatchOdds(),
     getAllMatchScores(),
+    getAllPlayerGoals(),
   ]);
   const scoreMap = new Map(matchScores.map((s) => [s.matchId, s]));
+  const goalsMap = new Map(playerGoalsRows.map((g) => [g.userCode, g.goals]));
   const matches = rawMatches.map((m) => {
     const dbScore = scoreMap.get(m.id);
     if (!dbScore) return m;
@@ -44,12 +46,16 @@ export default async function LeaderboardPage() {
       const tournamentPoints = tBet
         ? calculateTournamentPoints(tBet, tournamentResult.topScorer, tournamentResult.winner, tournamentResult.topScorerGoals)
         : 0;
+      const goals = goalsMap.get(u.code) ?? 0;
+      const goalsPoints = goals * 2;
       return {
         code: u.code,
         name: u.name,
         matchPoints,
         tournamentPoints,
-        total: matchPoints + tournamentPoints,
+        goalsPoints,
+        goals,
+        total: matchPoints + tournamentPoints + goalsPoints,
         betsPlaced: bets.length,
         perfect,
         good,
@@ -63,6 +69,7 @@ export default async function LeaderboardPage() {
   entries.sort((a, b) => b.total - a.total || b.matchPoints - a.matchPoints);
 
   const medals = ['🥇', '🥈', '🥉'];
+  const maxGoals = Math.max(...entries.map((e) => e.goals), 0);
 
   return (
     <div className="space-y-6">
@@ -102,6 +109,7 @@ export default async function LeaderboardPage() {
               <th className="text-center px-3 py-3 text-gray-500 font-medium hidden sm:table-cell" title="Exact score (5 pts)">🎯</th>
               <th className="text-center px-3 py-3 text-gray-500 font-medium hidden sm:table-cell" title="Correct result (1 pt)">👍</th>
               <th className="text-center px-3 py-3 text-gray-500 font-medium hidden sm:table-cell" title="Wrong (0 pts)">❌</th>
+              <th className="text-center px-3 py-3 text-gray-500 font-medium hidden sm:table-cell" title="Goals (2 pts each)">⚽</th>
               <th className="text-right px-4 py-3 text-gray-500 font-medium hidden sm:table-cell">Trophy</th>
               <th className="text-right px-4 py-3 text-gray-500 font-medium">Total</th>
             </tr>
@@ -123,9 +131,13 @@ export default async function LeaderboardPage() {
                     {entry.code === user.code && (
                       <span className="ml-1.5 text-xs text-green-600">(you)</span>
                     )}
+                    {entry.goals > 0 && entry.goals === maxGoals && (
+                      <span className="ml-1.5 text-xs text-yellow-600" title="King of Goals">👑</span>
+                    )}
                     {/* Mobile: show breakdown inline */}
                     <div className="text-xs text-gray-400 mt-0.5 sm:hidden">
                       🎯 {entry.perfect} · 👍 {entry.good} · ❌ {entry.miss}
+                      {entry.goals > 0 ? ` · ⚽ ${entry.goals}` : ''}
                       {entry.hasTournamentBet ? ' · trophy' : ''}
                     </div>
                     {/* Desktop: just show bet count */}
@@ -138,6 +150,15 @@ export default async function LeaderboardPage() {
                 <td className="px-3 py-3 text-center text-gray-700 hidden sm:table-cell">{entry.perfect}</td>
                 <td className="px-3 py-3 text-center text-gray-700 hidden sm:table-cell">{entry.good}</td>
                 <td className="px-3 py-3 text-center text-gray-700 hidden sm:table-cell">{entry.miss}</td>
+                <td className="px-3 py-3 text-center hidden sm:table-cell">
+                  {entry.goals > 0 ? (
+                    <span className={entry.goals === maxGoals ? 'text-yellow-600 font-semibold' : 'text-gray-700'}>
+                      {entry.goals}
+                    </span>
+                  ) : (
+                    <span className="text-gray-300">—</span>
+                  )}
+                </td>
                 <td className="px-4 py-3 text-right text-gray-700 hidden sm:table-cell">
                   {entry.tournamentPoints}
                 </td>

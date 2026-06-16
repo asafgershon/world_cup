@@ -8,6 +8,13 @@ const PUBLIC_PATHS = ['/', '/api/auth'];
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Redirect authenticated users away from login page
+  if (pathname === '/') {
+    const code = request.cookies.get(SESSION_COOKIE)?.value;
+    if (code) return NextResponse.redirect(new URL('/matches', request.url));
+    return NextResponse.next();
+  }
+
   // Allow public paths
   if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
     return NextResponse.next();
