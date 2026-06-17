@@ -195,17 +195,17 @@ export async function setMatchOdds(odds: MatchOdds): Promise<void> {
 // ── Player Goals ───────────────────────────────────────────────────────────
 
 export async function getAllPlayerGoals(): Promise<{ userCode: string; goals: number }[]> {
-  const rows = await sbFetch('world_cup_user_goals') as any[];
+  const rows = await sbFetch('world_cup_users', { query: 'select=code,Goals' }) as any[];
   if (!rows) return [];
-  return rows.map((r) => ({ userCode: r.user_code, goals: Number(r.goals) }));
+  return rows.map((r) => ({ userCode: r.code, goals: Number(r.Goals ?? 0) }));
 }
 
 export async function setPlayerGoals(userCode: string, goals: number): Promise<void> {
   const code = userCode.toUpperCase();
-  await sbFetch('world_cup_user_goals', {
-    method: 'POST',
-    upsert: true,
-    body: { user_code: code, goals, updated_at: new Date().toISOString() },
+  await sbFetch('world_cup_users', {
+    method: 'PATCH',
+    query: `code=eq.${code}`,
+    body: { Goals: goals },
   });
 }
 
