@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Match, MatchBet, MatchOdds } from '@/types';
 import { MatchCard } from '@/components/MatchCard';
 
@@ -25,6 +25,7 @@ export default function MatchesPage() {
   const [betsMap, setBetsMap] = useState<Map<number, MatchBet>>(new Map());
   const [oddsMap, setOddsMap] = useState<Map<string, MatchOdds>>(new Map());
   const [loading, setLoading] = useState(true);
+  const scrolledRef = useRef(false);
 
   useEffect(() => {
     Promise.all([
@@ -39,6 +40,18 @@ export default function MatchesPage() {
       },
     );
   }, []);
+
+  useEffect(() => {
+    if (loading || scrolledRef.current) return;
+    scrolledRef.current = true;
+    const todayStr = new Date().toDateString();
+    const firstToday = matches.find((m) => new Date(m.utcDate).toDateString() === todayStr);
+    if (firstToday) {
+      requestAnimationFrame(() => {
+        document.getElementById(`match-${firstToday.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+    }
+  }, [loading, matches]);
 
   if (loading) {
     return (
@@ -82,12 +95,14 @@ export default function MatchesPage() {
             {grouped[stage]
               .sort((a, b) => new Date(a.utcDate).getTime() - new Date(b.utcDate).getTime())
               .map((match) => (
-                <MatchCard
-                  key={match.id}
-                  match={match}
-                  initialBet={betsMap.get(match.id) ?? null}
-                  odds={oddsMap.get(`${match.homeTeam.name}_${match.awayTeam.name}`)}
-                />
+                <div key={match.id} id={`match-${match.id}`}>
+                  <MatchCard
+                    match={match}
+                    initialBet={betsMap.get(match.id) ?? null}
+                    odds={oddsMap.get(`${match.homeTeam.name}_${match.awayTeam.name}`)}
+                    allMatches={matches}
+                  />
+                </div>
               ))}
           </div>
         </section>

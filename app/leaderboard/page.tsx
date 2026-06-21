@@ -186,6 +186,55 @@ export default async function LeaderboardPage() {
           )}
         </div>
       ) : null}
+
+      {/* Mini-tables: most exact scores & most correct directions */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="card overflow-hidden p-0">
+          <div className="px-4 py-2 bg-gray-50 border-b border-gray-100">
+            <h3 className="text-sm font-semibold text-gray-600">🎯 Most Exact Scores</h3>
+          </div>
+          <table className="w-full text-sm">
+            <tbody className="divide-y divide-gray-50">
+              {[...entries]
+                .sort((a, b) => b.perfect - a.perfect || b.total - a.total)
+                .slice(0, 5)
+                .map((entry, i) => (
+                  <tr key={entry.code} className={entry.code === user.code ? 'bg-green-50 font-semibold' : 'hover:bg-gray-50'}>
+                    <td className="px-3 py-2 text-gray-400 text-xs w-6">{i + 1}</td>
+                    <td className="px-3 py-2">
+                      {entry.name}
+                      {entry.code === user.code && <span className="ml-1 text-xs text-green-600">(you)</span>}
+                    </td>
+                    <td className="px-3 py-2 text-right font-bold text-gray-700">{entry.perfect}</td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="card overflow-hidden p-0">
+          <div className="px-4 py-2 bg-gray-50 border-b border-gray-100">
+            <h3 className="text-sm font-semibold text-gray-600">👍 Most Correct Results</h3>
+          </div>
+          <table className="w-full text-sm">
+            <tbody className="divide-y divide-gray-50">
+              {[...entries]
+                .sort((a, b) => b.good - a.good || b.total - a.total)
+                .slice(0, 5)
+                .map((entry, i) => (
+                  <tr key={entry.code} className={entry.code === user.code ? 'bg-green-50 font-semibold' : 'hover:bg-gray-50'}>
+                    <td className="px-3 py-2 text-gray-400 text-xs w-6">{i + 1}</td>
+                    <td className="px-3 py-2">
+                      {entry.name}
+                      {entry.code === user.code && <span className="ml-1 text-xs text-green-600">(you)</span>}
+                    </td>
+                    <td className="px-3 py-2 text-right font-bold text-gray-700">{entry.good}</td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

@@ -58,9 +58,31 @@ type Props = {
   match: Match;
   initialBet: MatchBet | null;
   odds?: MatchOdds;
+  allMatches?: Match[];
 };
 
-export function MatchCard({ match, initialBet, odds }: Props) {
+function TeamResultRow({ m, teamName }: { m: Match; teamName: string }) {
+  const isHome = m.homeTeam.name === teamName;
+  const opponent = isHome ? (m.awayTeam.shortName || m.awayTeam.name) : (m.homeTeam.shortName || m.homeTeam.name);
+  const myGoals = isHome ? m.score.fullTime.home : m.score.fullTime.away;
+  const theirGoals = isHome ? m.score.fullTime.away : m.score.fullTime.home;
+  const result =
+    myGoals !== null && theirGoals !== null
+      ? myGoals > theirGoals ? 'W' : myGoals < theirGoals ? 'L' : 'D'
+      : '?';
+  const color = result === 'W' ? 'text-green-600' : result === 'L' ? 'text-red-500' : 'text-gray-500';
+  return (
+    <div className="flex items-center justify-between text-xs text-gray-600">
+      <span>vs {getFlag(opponent)} {opponent}</span>
+      <span className="tabular-nums flex items-center gap-1.5">
+        <span>{myGoals}–{theirGoals}</span>
+        <span className={`font-bold ${color}`}>{result}</span>
+      </span>
+    </div>
+  );
+}
+
+export function MatchCard({ match, initialBet, odds, allMatches }: Props) {
   const [bet, setBet] = useState<MatchBet | null>(initialBet);
   const [home, setHome] = useState(initialBet != null ? String(initialBet.homeScore) : '');
   const [away, setAway] = useState(initialBet != null ? String(initialBet.awayScore) : '');
@@ -87,6 +109,7 @@ export function MatchCard({ match, initialBet, odds }: Props) {
   const [otherBets, setOtherBets] = useState<OtherBet[] | null>(null);
   const [loadingBets, setLoadingBets] = useState(false);
   const [betsRevealed, setBetsRevealed] = useState<boolean | null>(null);
+  const [showTeamForm, setShowTeamForm] = useState(false);
 
   async function handleToggleOtherBets() {
     const next = !showOtherBets;
@@ -125,6 +148,20 @@ export function MatchCard({ match, initialBet, odds }: Props) {
     : 'text-gray-400';
 
   const myCode = bet?.userCode;
+
+  const teamFormData = allMatches
+    ? (() => {
+        const finished = allMatches.filter((m) => m.status === 'FINISHED' && m.id !== match.id);
+        return {
+          homeMatches: finished
+            .filter((m) => m.homeTeam.name === match.homeTeam.name || m.awayTeam.name === match.homeTeam.name)
+            .sort((a, b) => new Date(a.utcDate).getTime() - new Date(b.utcDate).getTime()),
+          awayMatches: finished
+            .filter((m) => m.homeTeam.name === match.awayTeam.name || m.awayTeam.name === match.awayTeam.name)
+            .sort((a, b) => new Date(a.utcDate).getTime() - new Date(b.utcDate).getTime()),
+        };
+      })()
+    : null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -455,6 +492,58 @@ export function MatchCard({ match, initialBet, odds }: Props) {
           </div>
         )}
       </div>
+
+      {/* Team form toggle */}
+      {allMatches && (
+        <div className="mt-2 pt-2 border-t border-gray-100">
+          <button
+            type="button"
+            onClick={() => setShowTeamForm((v) => !v)}
+            className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1 transition-colors w-full"
+          >
+            <span
+              className="inline-block transition-transform duration-150"
+              style={{ transform: showTeamForm ? 'rotate(180deg)' : 'rotate(0deg)' }}
+            >
+              ▾
+            </span>
+            <span>Previous results</span>
+          </button>
+
+          {showTeamForm && teamFormData && (
+            <div className="mt-2 grid grid-cols-2 gap-3">
+              <div>
+                <p className="text-xs font-semibold text-gray-500 mb-1">
+                  {getFlag(match.homeTeam.name)} {match.homeTeam.shortName || match.homeTeam.name}
+                </p>
+                {teamFormData.homeMatches.length === 0 ? (
+                  <p className="text-xs text-gray-300">No prev. games</p>
+                ) : (
+                  <div className="space-y-0.5">
+                    {teamFormData.homeMatches.map((m) => (
+                      <TeamResultRow key={m.id} m={m} teamName={match.homeTeam.name} />
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-gray-500 mb-1">
+                  {getFlag(match.awayTeam.name)} {match.awayTeam.shortName || match.awayTeam.name}
+                </p>
+                {teamFormData.awayMatches.length === 0 ? (
+                  <p className="text-xs text-gray-300">No prev. games</p>
+                ) : (
+                  <div className="space-y-0.5">
+                    {teamFormData.awayMatches.map((m) => (
+                      <TeamResultRow key={m.id} m={m} teamName={match.awayTeam.name} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
