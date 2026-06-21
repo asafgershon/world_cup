@@ -44,11 +44,13 @@ export default function MatchesPage() {
   useEffect(() => {
     if (loading || scrolledRef.current) return;
     scrolledRef.current = true;
-    const todayStr = new Date().toDateString();
-    const firstToday = matches.find((m) => new Date(m.utcDate).toDateString() === todayStr);
-    if (firstToday) {
+    const sorted = [...matches].sort((a, b) => new Date(a.utcDate).getTime() - new Date(b.utcDate).getTime());
+    const live = sorted.find((m) => m.status === 'IN_PLAY' || m.status === 'LIVE' || m.status === 'PAUSED');
+    const next = sorted.find((m) => m.status === 'SCHEDULED' || m.status === 'TIMED');
+    const target = live ?? next;
+    if (target) {
       requestAnimationFrame(() => {
-        document.getElementById(`match-${firstToday.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        document.getElementById(`match-${target.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     }
   }, [loading, matches]);

@@ -62,21 +62,30 @@ type Props = {
 };
 
 function TeamResultRow({ m, teamName }: { m: Match; teamName: string }) {
+  const homeShort = m.homeTeam.shortName || m.homeTeam.name;
+  const awayShort = m.awayTeam.shortName || m.awayTeam.name;
+  const homeGoals = m.score.fullTime.home;
+  const awayGoals = m.score.fullTime.away;
   const isHome = m.homeTeam.name === teamName;
-  const opponent = isHome ? (m.awayTeam.shortName || m.awayTeam.name) : (m.homeTeam.shortName || m.homeTeam.name);
-  const myGoals = isHome ? m.score.fullTime.home : m.score.fullTime.away;
-  const theirGoals = isHome ? m.score.fullTime.away : m.score.fullTime.home;
-  const result =
-    myGoals !== null && theirGoals !== null
-      ? myGoals > theirGoals ? 'W' : myGoals < theirGoals ? 'L' : 'D'
-      : '?';
-  const color = result === 'W' ? 'text-green-600' : result === 'L' ? 'text-red-500' : 'text-gray-500';
+  const weWon =
+    homeGoals !== null && awayGoals !== null
+      ? isHome
+        ? homeGoals > awayGoals
+        : awayGoals > homeGoals
+      : null;
+  const isDraw = homeGoals !== null && awayGoals !== null && homeGoals === awayGoals;
+  const resultColor = weWon ? 'text-green-600' : isDraw ? 'text-gray-500' : 'text-red-500';
   return (
-    <div className="flex items-center justify-between text-xs text-gray-600">
-      <span>vs {getFlag(opponent)} {opponent}</span>
-      <span className="tabular-nums flex items-center gap-1.5">
-        <span>{myGoals}–{theirGoals}</span>
-        <span className={`font-bold ${color}`}>{result}</span>
+    <div className="flex items-center gap-1 text-xs text-gray-700 tabular-nums">
+      <span className={isHome ? 'font-semibold' : 'text-gray-400'}>
+        {getFlag(m.homeTeam.name)} {homeShort}
+      </span>
+      <span className="font-bold mx-0.5">{homeGoals}–{awayGoals}</span>
+      <span className={!isHome ? 'font-semibold' : 'text-gray-400'}>
+        {getFlag(m.awayTeam.name)} {awayShort}
+      </span>
+      <span className={`ml-auto font-bold ${resultColor}`}>
+        {weWon ? 'W' : isDraw ? 'D' : 'L'}
       </span>
     </div>
   );
