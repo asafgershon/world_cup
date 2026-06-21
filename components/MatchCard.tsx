@@ -520,7 +520,7 @@ export function MatchCard({ match, initialBet, odds, allMatches }: Props) {
           </button>
 
           {showTeamForm && teamFormData && (
-            <div className="mt-2 grid grid-cols-2 gap-3">
+            <div className="mt-2 space-y-2">
               <div>
                 <p className="text-xs font-semibold text-gray-500 mb-1">
                   {getFlag(match.homeTeam.name)} {match.homeTeam.shortName || match.homeTeam.name}
