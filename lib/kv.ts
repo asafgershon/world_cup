@@ -64,7 +64,7 @@ export async function getMatchBet(userCode: string, matchId: number): Promise<Ma
   }) as any[];
   if (!rows || rows.length === 0) return null;
   const r = rows[0];
-  return { userCode: r.user_code, matchId: r.match_id, homeScore: r.home_score, awayScore: r.away_score, placedAt: r.placed_at };
+  return { userCode: r.user_code, matchId: r.match_id, homeScore: r.home_score, awayScore: r.away_score, placedAt: r.placed_at, isRandom: r.is_random ?? false };
 }
 
 export async function setMatchBet(bet: MatchBet): Promise<void> {
@@ -72,7 +72,7 @@ export async function setMatchBet(bet: MatchBet): Promise<void> {
   await sbFetch('world_cup_match_bets', {
     method: 'POST',
     upsert: true,
-    body: { user_code: code, match_id: bet.matchId, home_score: bet.homeScore, away_score: bet.awayScore, placed_at: bet.placedAt },
+    body: { user_code: code, match_id: bet.matchId, home_score: bet.homeScore, away_score: bet.awayScore, placed_at: bet.placedAt, is_random: bet.isRandom ?? false },
   });
 }
 
@@ -80,13 +80,19 @@ export async function getUserBets(userCode: string): Promise<MatchBet[]> {
   const code = userCode.toUpperCase();
   const rows = await sbFetch('world_cup_match_bets', { query: `user_code=eq.${code}` }) as any[];
   if (!rows) return [];
-  return rows.map((r) => ({ userCode: r.user_code, matchId: r.match_id, homeScore: r.home_score, awayScore: r.away_score, placedAt: r.placed_at }));
+  return rows.map((r) => ({ userCode: r.user_code, matchId: r.match_id, homeScore: r.home_score, awayScore: r.away_score, placedAt: r.placed_at, isRandom: r.is_random ?? false }));
 }
 
 export async function getMatchBets(matchId: number): Promise<MatchBet[]> {
   const rows = await sbFetch('world_cup_match_bets', { query: `match_id=eq.${matchId}` }) as any[];
   if (!rows) return [];
-  return rows.map((r) => ({ userCode: r.user_code, matchId: r.match_id, homeScore: r.home_score, awayScore: r.away_score, placedAt: r.placed_at }));
+  return rows.map((r) => ({ userCode: r.user_code, matchId: r.match_id, homeScore: r.home_score, awayScore: r.away_score, placedAt: r.placed_at, isRandom: r.is_random ?? false }));
+}
+
+export async function getAllBets(): Promise<MatchBet[]> {
+  const rows = await sbFetch('world_cup_match_bets') as any[];
+  if (!rows) return [];
+  return rows.map((r) => ({ userCode: r.user_code, matchId: r.match_id, homeScore: r.home_score, awayScore: r.away_score, placedAt: r.placed_at, isRandom: r.is_random ?? false }));
 }
 
 // ── Tournament Bets ────────────────────────────────────────────────────────

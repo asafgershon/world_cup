@@ -26,6 +26,8 @@ function AdminContent() {
   const [oddsInput, setOddsInput] = useState('');
   const [savingOdds, setSavingOdds] = useState(false);
   const [oddsMsg, setOddsMsg] = useState('');
+  const [randomizing, setRandomizing] = useState(false);
+  const [randomMsg, setRandomMsg] = useState('');
   const [playerGoals, setPlayerGoalsState] = useState<Record<string, number>>({});
   const [savingGoals, setSavingGoals] = useState(false);
   const [goalsMsg, setGoalsMsg] = useState('');
@@ -172,6 +174,17 @@ function AdminContent() {
     }
     setSavingOdds(false);
     setTimeout(() => setOddsMsg(''), 4000);
+  }
+
+  async function generateRandomBets() {
+    if (!confirm('This will generate random bets (0–4 goals each team) for every user on every match they haven\'t bet on. Continue?')) return;
+    setRandomizing(true);
+    setRandomMsg('');
+    const res = await fetch('/api/admin/random-bets', { method: 'POST' });
+    const data = await res.json();
+    setRandomMsg(res.ok ? `Generated ${data.count} random bets` : data.error ?? 'Error');
+    setRandomizing(false);
+    setTimeout(() => setRandomMsg(''), 5000);
   }
 
   async function savePlayerGoals() {
@@ -348,6 +361,18 @@ function AdminContent() {
           </button>
         </div>
         {oddsMsg && <p className="text-sm text-green-700">{oddsMsg}</p>}
+      </div>
+
+      {/* Random Bets */}
+      <div className="card space-y-3">
+        <h2 className="font-bold">Generate Random Bets 🎲</h2>
+        <p className="text-sm text-gray-500">
+          For every user who hasn&apos;t bet on a match, generate a random score (0–4 goals each team). Random bets are marked with 🎲 and get overwritten if the user places a real bet.
+        </p>
+        <button onClick={generateRandomBets} disabled={randomizing} className="btn-secondary text-sm">
+          {randomizing ? 'Generating...' : 'Generate Random Bets'}
+        </button>
+        {randomMsg && <p className="text-sm text-green-700">{randomMsg}</p>}
       </div>
 
       {/* Player Goals */}

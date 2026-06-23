@@ -9,6 +9,7 @@ type OtherBet = {
   userName: string;
   homeScore: number;
   awayScore: number;
+  isRandom?: boolean;
 };
 
 function calcBetPoints(homeScore: number, awayScore: number, match: Match, odds?: MatchOdds): number {
@@ -305,11 +306,11 @@ export function MatchCard({ match, initialBet, odds, allMatches }: Props) {
             <div className="text-center">
               {pts !== null && pts > 0 ? (
                 <span className="font-bold text-green-700">
-                  +{pts} pts{isExact ? ' 🎯' : ''}
+                  +{pts} pts{isExact ? ' 🎯' : ''}{bet?.isRandom ? ' 🎲' : ''}
                 </span>
               ) : bet ? (
                 <span className="text-xs text-gray-400">
-                  {bet.homeScore}–{bet.awayScore} · 0 pts
+                  {bet.homeScore}–{bet.awayScore} · 0 pts{bet.isRandom ? ' 🎲' : ''}
                 </span>
               ) : (
                 <span className="text-xs text-gray-400">no bet</span>
@@ -319,7 +320,7 @@ export function MatchCard({ match, initialBet, odds, allMatches }: Props) {
             <div className="text-center">
               {bet ? (
                 <span className="text-sm text-gray-500 font-medium">
-                  Your bet: {bet.homeScore}–{bet.awayScore}
+                  Your bet: {bet.homeScore}–{bet.awayScore}{bet.isRandom ? ' 🎲' : ''}
                 </span>
               ) : (
                 <span className="text-xs text-gray-400">Betting closed</span>
@@ -391,11 +392,11 @@ export function MatchCard({ match, initialBet, odds, allMatches }: Props) {
               <div className="text-right">
                 {pts !== null && pts > 0 ? (
                   <span className="font-bold text-green-700">
-                    +{pts} pts{isExact ? ' 🎯' : ''}
+                    +{pts} pts{isExact ? ' 🎯' : ''}{bet?.isRandom ? ' 🎲' : ''}
                   </span>
                 ) : bet ? (
                   <span className="text-xs text-gray-400">
-                    {bet.homeScore}–{bet.awayScore} · 0pts
+                    {bet.homeScore}–{bet.awayScore} · 0pts{bet.isRandom ? ' 🎲' : ''}
                   </span>
                 ) : (
                   <span className="text-xs text-gray-400">no bet</span>
@@ -417,7 +418,7 @@ export function MatchCard({ match, initialBet, odds, allMatches }: Props) {
               <div className="text-right">
                 {bet ? (
                   <span className="text-xs text-gray-500 font-medium">
-                    {bet.homeScore}–{bet.awayScore}
+                    {bet.homeScore}–{bet.awayScore}{bet.isRandom ? ' 🎲' : ''}
                   </span>
                 ) : (
                   <span className="text-xs text-gray-400">no bet</span>
@@ -486,7 +487,7 @@ export function MatchCard({ match, initialBet, odds, allMatches }: Props) {
                         {isMe && <span className="text-green-500 ml-1">(you)</span>}
                       </span>
                       <span className="flex items-center gap-2 tabular-nums">
-                        <span>{ob.homeScore}–{ob.awayScore}</span>
+                        <span>{ob.homeScore}–{ob.awayScore}{ob.isRandom ? ' 🎲' : ''}</span>
                         {obPts !== null && (
                           <span className={obPts > 0 ? 'text-green-600' : 'text-gray-400'}>
                             {obPts > 0 ? `+${obPts}` : '0'} pts

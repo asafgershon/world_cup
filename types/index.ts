@@ -11,6 +11,7 @@ export type MatchBet = {
   homeScore: number;
   awayScore: number;
   placedAt: string;
+  isRandom?: boolean;
 };
 
 export type TournamentBet = {

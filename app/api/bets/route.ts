@@ -32,6 +32,7 @@ export async function GET(request: Request) {
       userName: userMap.get(b.userCode) ?? b.userCode,
       homeScore: b.homeScore,
       awayScore: b.awayScore,
+      isRandom: b.isRandom ?? false,
     }));
     return NextResponse.json({ revealed: true, bets: result });
   }
@@ -72,6 +73,7 @@ export async function POST(request: Request) {
     homeScore,
     awayScore,
     placedAt: new Date().toISOString(),
+    isRandom: false,
   };
 
   await setMatchBet(bet);
