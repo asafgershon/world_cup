@@ -12,7 +12,7 @@ type OtherBet = {
   isRandom?: boolean;
 };
 
-function calcBetPoints(homeScore: number, awayScore: number, match: Match, odds?: MatchOdds): number {
+function calcBetPoints(homeScore: number, awayScore: number, match: Match, odds?: MatchOdds, isRandom?: boolean): number {
   if (match.status !== 'FINISHED') return 0;
   const a = match.score.fullTime;
   if (a.home === null || a.away === null) return 0;
@@ -30,7 +30,7 @@ function calcBetPoints(homeScore: number, awayScore: number, match: Match, odds?
     resultPoints = 1;
   }
 
-  if (homeScore === a.home && awayScore === a.away) return resultPoints + 4;
+  if (!isRandom && homeScore === a.home && awayScore === a.away) return resultPoints + 4;
   return resultPoints;
 }
 
@@ -142,8 +142,8 @@ export function MatchCard({ match, initialBet, odds, allMatches }: Props) {
   const bettable = (match.status === 'SCHEDULED' || match.status === 'TIMED') && timeUntilDeadline > 0;
   const isLive = match.status === 'IN_PLAY' || match.status === 'LIVE' || match.status === 'PAUSED';
   const isFinished = match.status === 'FINISHED';
-  const pts = bet && isFinished ? calcBetPoints(bet.homeScore, bet.awayScore, match, odds) : null;
-  const isExact = bet && isFinished
+  const pts = bet && isFinished ? calcBetPoints(bet.homeScore, bet.awayScore, match, odds, bet.isRandom) : null;
+  const isExact = bet && isFinished && !bet.isRandom
     ? bet.homeScore === match.score.fullTime.home && bet.awayScore === match.score.fullTime.away
     : false;
 
@@ -473,7 +473,7 @@ export function MatchCard({ match, initialBet, odds, allMatches }: Props) {
                 {otherBets.map((ob) => {
                   const isMe = ob.userCode === myCode;
                   const obPts = isFinished
-                    ? calcBetPoints(ob.homeScore, ob.awayScore, match, odds)
+                    ? calcBetPoints(ob.homeScore, ob.awayScore, match, odds, ob.isRandom)
                     : null;
                   return (
                     <div

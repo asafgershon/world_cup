@@ -70,7 +70,7 @@ export function calculateMatchPoints(bet: MatchBet, match: Match, odds?: MatchOd
     resultPoints = 1;
   }
 
-  if (bet.homeScore === actual.home && bet.awayScore === actual.away) {
+  if (!bet.isRandom && bet.homeScore === actual.home && bet.awayScore === actual.away) {
     return resultPoints + 4;
   }
 
