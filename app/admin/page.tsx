@@ -129,30 +129,30 @@ function AdminContent() {
   }
 
   const ODDS_PRESET = JSON.stringify([
-    {"homeTeam":"Czechia","awayTeam":"South Africa","homeOdds":2,"drawOdds":3.5,"awayOdds":4},
-    {"homeTeam":"Switzerland","awayTeam":"Bosnia-Herzegovina","homeOdds":2,"drawOdds":4,"awayOdds":5},
-    {"homeTeam":"Canada","awayTeam":"Qatar","homeOdds":2,"drawOdds":4.5,"awayOdds":7},
-    {"homeTeam":"Mexico","awayTeam":"South Korea","homeOdds":2,"drawOdds":4,"awayOdds":3.5},
-    {"homeTeam":"United States","awayTeam":"Australia","homeOdds":2,"drawOdds":4,"awayOdds":5},
-    {"homeTeam":"Scotland","awayTeam":"Morocco","homeOdds":4,"drawOdds":3,"awayOdds":2},
-    {"homeTeam":"Brazil","awayTeam":"Haiti","homeOdds":1.5,"drawOdds":12,"awayOdds":15},
-    {"homeTeam":"Turkey","awayTeam":"Paraguay","homeOdds":2.5,"drawOdds":3.5,"awayOdds":3.5},
-    {"homeTeam":"Netherlands","awayTeam":"Sweden","homeOdds":2,"drawOdds":4,"awayOdds":5},
-    {"homeTeam":"Germany","awayTeam":"Ivory Coast","homeOdds":1.5,"drawOdds":4.5,"awayOdds":6},
-    {"homeTeam":"Ecuador","awayTeam":"Curaçao","homeOdds":1.5,"drawOdds":6,"awayOdds":10},
-    {"homeTeam":"Tunisia","awayTeam":"Japan","homeOdds":4,"drawOdds":3.5,"awayOdds":2},
-    {"homeTeam":"Spain","awayTeam":"Saudi Arabia","homeOdds":1.5,"drawOdds":8,"awayOdds":12},
-    {"homeTeam":"Belgium","awayTeam":"Iran","homeOdds":1.5,"drawOdds":5,"awayOdds":8},
-    {"homeTeam":"Uruguay","awayTeam":"Cape Verde Islands","homeOdds":1.5,"drawOdds":4,"awayOdds":6},
-    {"homeTeam":"New Zealand","awayTeam":"Egypt","homeOdds":5,"drawOdds":4,"awayOdds":2},
-    {"homeTeam":"Argentina","awayTeam":"Austria","homeOdds":2,"drawOdds":3.5,"awayOdds":5.5},
-    {"homeTeam":"France","awayTeam":"Iraq","homeOdds":1.5,"drawOdds":9,"awayOdds":12},
-    {"homeTeam":"Norway","awayTeam":"Senegal","homeOdds":2,"drawOdds":3.5,"awayOdds":3.5},
-    {"homeTeam":"Jordan","awayTeam":"Algeria","homeOdds":6,"drawOdds":4,"awayOdds":2},
-    {"homeTeam":"Portugal","awayTeam":"Uzbekistan","homeOdds":1.5,"drawOdds":8,"awayOdds":11},
-    {"homeTeam":"England","awayTeam":"Ghana","homeOdds":1.5,"drawOdds":6,"awayOdds":8},
-    {"homeTeam":"Panama","awayTeam":"Croatia","homeOdds":7,"drawOdds":4,"awayOdds":1.5},
-    {"homeTeam":"Colombia","awayTeam":"Congo DR","homeOdds":1.5,"drawOdds":4,"awayOdds":7},
+    {"homeTeam":"Switzerland","awayTeam":"Canada","homeOdds":2.5,"drawOdds":3.5,"awayOdds":3.5},
+    {"homeTeam":"Bosnia-Herzegovina","awayTeam":"Qatar","homeOdds":2,"drawOdds":4,"awayOdds":5},
+    {"homeTeam":"Scotland","awayTeam":"Brazil","homeOdds":6,"drawOdds":4.5,"awayOdds":1.5},
+    {"homeTeam":"Morocco","awayTeam":"Haiti","homeOdds":1.5,"drawOdds":6,"awayOdds":10},
+    {"homeTeam":"Czechia","awayTeam":"Mexico","homeOdds":3.5,"drawOdds":3,"awayOdds":2.5},
+    {"homeTeam":"South Africa","awayTeam":"South Korea","homeOdds":4,"drawOdds":3.5,"awayOdds":2.5},
+    {"homeTeam":"Curaçao","awayTeam":"Ivory Coast","homeOdds":9,"drawOdds":6,"awayOdds":1.5},
+    {"homeTeam":"Ecuador","awayTeam":"Germany","homeOdds":4.5,"drawOdds":3.5,"awayOdds":1.5},
+    {"homeTeam":"Tunisia","awayTeam":"Netherlands","homeOdds":6,"drawOdds":4,"awayOdds":1.5},
+    {"homeTeam":"Japan","awayTeam":"Sweden","homeOdds":2,"drawOdds":3,"awayOdds":3.5},
+    {"homeTeam":"Turkey","awayTeam":"United States","homeOdds":2.5,"drawOdds":3,"awayOdds":2.5},
+    {"homeTeam":"Paraguay","awayTeam":"Australia","homeOdds":2.5,"drawOdds":3,"awayOdds":3},
+    {"homeTeam":"Senegal","awayTeam":"Iraq","homeOdds":1.5,"drawOdds":4,"awayOdds":6},
+    {"homeTeam":"Norway","awayTeam":"France","homeOdds":4.5,"drawOdds":3,"awayOdds":2},
+    {"homeTeam":"Cape Verde Islands","awayTeam":"Saudi Arabia","homeOdds":3,"drawOdds":3.5,"awayOdds":3},
+    {"homeTeam":"Uruguay","awayTeam":"Spain","homeOdds":5,"drawOdds":3.5,"awayOdds":1.5},
+    {"homeTeam":"Egypt","awayTeam":"Iran","homeOdds":2.5,"drawOdds":3,"awayOdds":3.5},
+    {"homeTeam":"New Zealand","awayTeam":"Belgium","homeOdds":7,"drawOdds":4,"awayOdds":1.5},
+    {"homeTeam":"Panama","awayTeam":"England","homeOdds":12,"drawOdds":6.5,"awayOdds":1.5},
+    {"homeTeam":"Croatia","awayTeam":"Ghana","homeOdds":2,"drawOdds":4,"awayOdds":5},
+    {"homeTeam":"Colombia","awayTeam":"Portugal","homeOdds":3.5,"drawOdds":3.5,"awayOdds":2},
+    {"homeTeam":"Congo DR","awayTeam":"Uzbekistan","homeOdds":2.5,"drawOdds":3.5,"awayOdds":3.5},
+    {"homeTeam":"Jordan","awayTeam":"Argentina","homeOdds":11,"drawOdds":7.5,"awayOdds":1.5},
+    {"homeTeam":"Algeria","awayTeam":"Austria","homeOdds":3.5,"drawOdds":3.5,"awayOdds":2.5},
   ], null, 2);
 
   async function saveOdds() {
@@ -341,7 +341,7 @@ function AdminContent() {
             onClick={() => setOddsInput(ODDS_PRESET)}
             className="btn-secondary text-sm"
           >
-            Load Round 2 Preset
+            Load Round 3 Preset
           </button>
           <button onClick={saveOdds} disabled={savingOdds || !oddsInput.trim()} className="btn-primary text-sm">
             {savingOdds ? 'Saving...' : 'Save Odds'}
