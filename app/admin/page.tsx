@@ -367,7 +367,7 @@ function AdminContent() {
       <div className="card space-y-3">
         <h2 className="font-bold">Generate Random Bets 🎲</h2>
         <p className="text-sm text-gray-500">
-          For every user who hasn&apos;t bet on a match, generate a random score (0–4 goals each team). Random bets are marked with 🎲 and get overwritten if the user places a real bet.
+          For every user who hasn&apos;t bet on a match that has already started or finished, generate a random score (0–4 goals each team). Random bets are marked with 🎲 and get overwritten if the user places a real bet.
         </p>
         <button onClick={generateRandomBets} disabled={randomizing} className="btn-secondary text-sm">
           {randomizing ? 'Generating...' : 'Generate Random Bets'}
