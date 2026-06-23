@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { cookies } from 'next/headers';
 import './globals.css';
 import { SESSION_COOKIE } from '@/lib/auth';
+import { getUser } from '@/lib/kv';
 import { NavMenu } from '@/components/NavMenu';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -20,7 +21,9 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies();
-  const isLoggedIn = !!cookieStore.get(SESSION_COOKIE)?.value;
+  const code = cookieStore.get(SESSION_COOKIE)?.value;
+  const user = code ? await getUser(code) : null;
+  const isLoggedIn = !!user;
 
   return (
     <html lang="en">
@@ -32,7 +35,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <span className="hidden sm:inline">World Cup 2026</span>
               <span className="sm:hidden">WC 2026</span>
             </Link>
-            {isLoggedIn && <NavMenu />}
+            {isLoggedIn && <NavMenu isAdmin={!!user?.isAdmin} />}
           </div>
         </header>
         <main className="max-w-4xl mx-auto px-4 py-6">{children}</main>

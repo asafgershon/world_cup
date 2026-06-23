@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 
-const links = [
+const baseLinks = [
   { href: '/matches', label: 'Matches' },
   { href: '/groups', label: 'Groups' },
   { href: '/tournament', label: 'Trophy' },
@@ -11,9 +11,11 @@ const links = [
   { href: '/trophy-picks', label: 'Picks' },
 ];
 
-export function NavMenu() {
+export function NavMenu({ isAdmin }: { isAdmin: boolean }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+
+  const links = isAdmin ? [...baseLinks, { href: '/admin', label: 'Admin' }] : baseLinks;
 
   useEffect(() => {
     function handleOutside(e: MouseEvent) {
