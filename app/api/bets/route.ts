@@ -18,8 +18,8 @@ export async function GET(request: Request) {
     const match = matches.find((m) => m.id === matchId);
     if (!match) return NextResponse.json({ error: 'Match not found' }, { status: 404 });
 
-    const bettingDeadline = new Date(match.utcDate).getTime() - 60 * 60 * 1000;
-    const revealed = Date.now() >= bettingDeadline || user.isAdmin;
+    const kickoff = new Date(match.utcDate).getTime();
+    const revealed = Date.now() >= kickoff || user.isAdmin;
 
     if (!revealed) {
       return NextResponse.json({ revealed: false, bets: [] });

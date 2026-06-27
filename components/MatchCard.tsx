@@ -101,11 +101,11 @@ export function MatchCard({ match, initialBet, odds, allMatches }: Props) {
 
   const [now, setNow] = useState(() => Date.now());
 
-  const bettingDeadline = new Date(match.utcDate).getTime() - 60 * 60 * 1000;
+  const bettingDeadline = new Date(match.utcDate).getTime() - 15 * 60 * 1000;
   const timeUntilDeadline = bettingDeadline - now;
 
   useEffect(() => {
-    const deadline = new Date(match.utcDate).getTime() - 60 * 60 * 1000;
+    const deadline = new Date(match.utcDate).getTime() - 15 * 60 * 1000;
     if (Date.now() >= deadline) return;
     const timer = setInterval(() => {
       const t = Date.now();
@@ -149,8 +149,8 @@ export function MatchCard({ match, initialBet, odds, allMatches }: Props) {
 
   const groupLabel = match.group ? match.group.replace('GROUP_', 'Group ') : null;
 
-  const isUrgent = bettable && timeUntilDeadline < 30 * 60 * 1000;
-  const isWarning = bettable && timeUntilDeadline < 2 * 60 * 60 * 1000;
+  const isUrgent = bettable && timeUntilDeadline < 5 * 60 * 1000;
+  const isWarning = bettable && timeUntilDeadline < 15 * 60 * 1000;
   const countdownColor = isUrgent
     ? 'text-red-500 font-semibold'
     : isWarning
@@ -464,7 +464,7 @@ export function MatchCard({ match, initialBet, odds, allMatches }: Props) {
               <p className="text-xs text-gray-400">Loading…</p>
             ) : betsRevealed === false ? (
               <p className="text-xs text-gray-400">
-                🔒 Bets are hidden until 1h before kickoff
+                🔒 Bets are hidden until the game begins
               </p>
             ) : otherBets && otherBets.length === 0 ? (
               <p className="text-xs text-gray-400">No bets placed yet</p>

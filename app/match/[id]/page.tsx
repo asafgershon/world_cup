@@ -7,7 +7,7 @@ import type { Match, MatchBet } from '@/types';
 function canBetClient(match: Match): boolean {
   if (match.status !== 'SCHEDULED') return false;
   const kickoff = new Date(match.utcDate).getTime();
-  return kickoff - Date.now() > 60 * 60 * 1000;
+  return kickoff - Date.now() > 15 * 60 * 1000;
 }
 
 function timeUntil(utcDate: string): string {
@@ -162,7 +162,7 @@ export default function MatchPage({ params }: { params: { id: string } }) {
                 {match.status === 'SCHEDULED' && (
                   <p className="text-xs text-gray-400 mt-1">
                     {bettable
-                      ? `Bet closes in ${timeUntil(new Date(new Date(match.utcDate).getTime() - 3600000).toISOString())}`
+                      ? `Bet closes in ${timeUntil(new Date(new Date(match.utcDate).getTime() - 900000).toISOString())}`
                       : match.status === 'SCHEDULED'
                       ? 'Betting closed'
                       : ''}
@@ -250,7 +250,7 @@ export default function MatchPage({ params }: { params: { id: string } }) {
               </button>
             ) : (
               <p className="text-center text-sm text-gray-500">
-                Betting is closed (within 1 hour of kickoff)
+                Betting is closed (within 15 minutes of kickoff)
               </p>
             )}
           </form>
