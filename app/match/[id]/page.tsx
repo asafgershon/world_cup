@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import type { Match, MatchBet } from '@/types';
 
 function canBetClient(match: Match): boolean {
-  if (match.status !== 'SCHEDULED') return false;
+  if (match.status !== 'SCHEDULED' && match.status !== 'TIMED') return false;
   const kickoff = new Date(match.utcDate).getTime();
   return kickoff - Date.now() > 15 * 60 * 1000;
 }
