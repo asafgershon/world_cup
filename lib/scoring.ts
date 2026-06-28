@@ -70,18 +70,11 @@ export function calculateMatchPoints(bet: MatchBet, match: Match, odds?: MatchOd
     resultPoints = 1;
   }
 
-  let points: number;
   if (!bet.isRandom && bet.homeScore === actual.home && bet.awayScore === actual.away) {
-    points = resultPoints + 4;
-  } else {
-    points = resultPoints;
+    return resultPoints + 4;
   }
 
-  if (match.stage === 'LAST_32') {
-    points *= 2;
-  }
-
-  return points;
+  return resultPoints;
 }
 
 export function calculateTournamentPoints(
