@@ -28,6 +28,8 @@ function AdminContent() {
   const [oddsMsg, setOddsMsg] = useState('');
   const [randomizing, setRandomizing] = useState(false);
   const [randomMsg, setRandomMsg] = useState('');
+  const [patchingLast32, setPatchingLast32] = useState(false);
+  const [patchLast32Msg, setPatchLast32Msg] = useState('');
   const [playerGoals, setPlayerGoalsState] = useState<Record<string, number>>({});
   const [savingGoals, setSavingGoals] = useState(false);
   const [goalsMsg, setGoalsMsg] = useState('');
@@ -157,6 +159,23 @@ function AdminContent() {
     {"homeTeam":"Algeria","awayTeam":"Austria","homeOdds":3.5,"drawOdds":3.5,"awayOdds":2.5},
   ], null, 2);
 
+  const LAST32_ODDS_PRESET = JSON.stringify([
+    {"homeTeam":"South Africa","awayTeam":"Canada","homeOdds":4.5,"drawOdds":3.5,"awayOdds":2},
+    {"homeTeam":"Brazil","awayTeam":"Japan","homeOdds":2,"drawOdds":3.5,"awayOdds":5},
+    {"homeTeam":"Germany","awayTeam":"Paraguay","homeOdds":1.5,"drawOdds":4.5,"awayOdds":7.5},
+    {"homeTeam":"Morocco","awayTeam":"Netherlands","homeOdds":3.5,"drawOdds":3,"awayOdds":2},
+    {"homeTeam":"Ivory Coast","awayTeam":"Norway","homeOdds":4,"drawOdds":3.5,"awayOdds":2},
+    {"homeTeam":"France","awayTeam":"Sweden","homeOdds":1.5,"drawOdds":5,"awayOdds":10},
+    {"homeTeam":"Mexico","awayTeam":"Ecuador","homeOdds":2,"drawOdds":4,"awayOdds":5},
+    {"homeTeam":"England","awayTeam":"Congo DR","homeOdds":1.5,"drawOdds":6,"awayOdds":12},
+    {"homeTeam":"Belgium","awayTeam":"Senegal","homeOdds":2,"drawOdds":4,"awayOdds":6},
+    {"homeTeam":"United States","awayTeam":"Bosnia-Herzegovina","homeOdds":1.5,"drawOdds":4,"awayOdds":6},
+    {"homeTeam":"Portugal","awayTeam":"Croatia","homeOdds":2,"drawOdds":3,"awayOdds":6},
+    {"homeTeam":"Australia","awayTeam":"Egypt","homeOdds":3,"drawOdds":3,"awayOdds":2.5},
+    {"homeTeam":"Argentina","awayTeam":"Cape Verde Islands","homeOdds":1.5,"drawOdds":7,"awayOdds":13},
+    {"homeTeam":"Colombia","awayTeam":"Ghana","homeOdds":1.5,"drawOdds":4,"awayOdds":7},
+  ], null, 2);
+
   async function saveOdds() {
     setSavingOdds(true);
     setOddsMsg('');
@@ -185,6 +204,17 @@ function AdminContent() {
     setRandomMsg(res.ok ? `Generated ${data.count} random bets` : data.error ?? 'Error');
     setRandomizing(false);
     setTimeout(() => setRandomMsg(''), 5000);
+  }
+
+  async function patchLast32Teams() {
+    if (!confirm('This will fetch matches from the API and patch the Last 32 team assignments. Continue?')) return;
+    setPatchingLast32(true);
+    setPatchLast32Msg('');
+    const res = await fetch('/api/admin/patch-last32-teams', { method: 'POST' });
+    const data = await res.json();
+    setPatchLast32Msg(res.ok ? `Patched ${data.patched} Last 32 fixtures` : data.error ?? 'Error');
+    setPatchingLast32(false);
+    setTimeout(() => setPatchLast32Msg(''), 5000);
   }
 
   async function savePlayerGoals() {
@@ -356,6 +386,13 @@ function AdminContent() {
           >
             Load Round 3 Preset
           </button>
+          <button
+            type="button"
+            onClick={() => setOddsInput(LAST32_ODDS_PRESET)}
+            className="btn-secondary text-sm"
+          >
+            Load Last 32 Preset
+          </button>
           <button onClick={saveOdds} disabled={savingOdds || !oddsInput.trim()} className="btn-primary text-sm">
             {savingOdds ? 'Saving...' : 'Save Odds'}
           </button>
@@ -373,6 +410,18 @@ function AdminContent() {
           {randomizing ? 'Generating...' : 'Generate Random Bets'}
         </button>
         {randomMsg && <p className="text-sm text-green-700">{randomMsg}</p>}
+      </div>
+
+      {/* Patch Last 32 Teams */}
+      <div className="card space-y-3">
+        <h2 className="font-bold">Patch Last 32 Teams</h2>
+        <p className="text-sm text-gray-500">
+          Forces a match sync from the API then patches the 14 known Last 32 fixtures with the correct team assignments.
+        </p>
+        <button onClick={patchLast32Teams} disabled={patchingLast32} className="btn-secondary text-sm">
+          {patchingLast32 ? 'Patching...' : 'Patch Last 32 Teams'}
+        </button>
+        {patchLast32Msg && <p className="text-sm text-green-700">{patchLast32Msg}</p>}
       </div>
 
       {/* Player Goals */}
