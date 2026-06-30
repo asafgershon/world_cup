@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import type { Match, MatchBet, MatchOdds } from '@/types';
 import { getFlag } from '@/lib/flags';
+import { getRegularTimeScore } from '@/lib/scoring';
 
 type OtherBet = {
   userCode: string;
@@ -14,7 +15,7 @@ type OtherBet = {
 
 function calcBetPoints(homeScore: number, awayScore: number, match: Match, odds?: MatchOdds, isRandom?: boolean): number {
   if (match.status !== 'FINISHED') return 0;
-  const a = match.score.fullTime;
+  const a = getRegularTimeScore(match);
   if (a.home === null || a.away === null) return 0;
 
   const betResult = Math.sign(homeScore - awayScore);
@@ -65,8 +66,9 @@ type Props = {
 function TeamResultRow({ m, teamName }: { m: Match; teamName: string }) {
   const homeShort = m.homeTeam.shortName || m.homeTeam.name;
   const awayShort = m.awayTeam.shortName || m.awayTeam.name;
-  const homeGoals = m.score.fullTime.home;
-  const awayGoals = m.score.fullTime.away;
+  const score = getRegularTimeScore(m);
+  const homeGoals = score.home;
+  const awayGoals = score.away;
   const isHome = m.homeTeam.name === teamName;
   const weWon =
     homeGoals !== null && awayGoals !== null
@@ -143,8 +145,9 @@ export function MatchCard({ match, initialBet, odds, allMatches }: Props) {
   const isLive = match.status === 'IN_PLAY' || match.status === 'LIVE' || match.status === 'PAUSED';
   const isFinished = match.status === 'FINISHED';
   const pts = bet && isFinished ? calcBetPoints(bet.homeScore, bet.awayScore, match, odds, bet.isRandom) : null;
+  const regularScore = getRegularTimeScore(match);
   const isExact = bet && isFinished && !bet.isRandom
-    ? bet.homeScore === match.score.fullTime.home && bet.awayScore === match.score.fullTime.away
+    ? bet.homeScore === regularScore.home && bet.awayScore === regularScore.away
     : false;
 
   const groupLabel = match.group ? match.group.replace('GROUP_', 'Group ') : null;
@@ -236,7 +239,7 @@ export function MatchCard({ match, initialBet, odds, allMatches }: Props) {
             <div className="flex items-center justify-center px-2">
               {isFinished ? (
                 <span className="text-2xl font-bold text-gray-800 tabular-nums">
-                  {match.score.fullTime.home}–{match.score.fullTime.away}
+                  {regularScore.home}–{regularScore.away}
                 </span>
               ) : isLive ? (
                 <span className="text-2xl font-bold text-red-600 tabular-nums">
@@ -343,7 +346,7 @@ export function MatchCard({ match, initialBet, odds, allMatches }: Props) {
           <div className="flex items-center justify-center">
             {isFinished ? (
               <span className="text-xl font-bold text-gray-800 tabular-nums">
-                {match.score.fullTime.home} – {match.score.fullTime.away}
+                {regularScore.home} – {regularScore.away}
               </span>
             ) : isLive ? (
               <span className="text-lg font-bold text-red-600 tabular-nums">
